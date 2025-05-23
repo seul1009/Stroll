@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:orientation="vertical"
+    android:padding="24dp"
+    tools:context=".ui.main.MainFragment">
+
+    <TextView
+        android:id="@+id/titleText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="오늘 산책 어때요?"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:padding="50dp"
+        android:layout_gravity="center_horizontal"
+        android:fontFamily="@font/dangam_bold"
+        android:paddingBottom="24dp" />
+
+    <!-- 오늘의 날씨 -->
+    <LinearLayout
+        android:id="@+id/layoutWeather"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#FFFBD9"
+        android:padding="16dp"
+        android:layout_marginBottom="16dp"
+        android:elevation="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginHorizontal="8dp"
+        android:gravity="center_horizontal"
+        android:clickable="true"
+        android:focusable="true">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="오늘의 날씨"
+            android:textSize="16sp"
+            android:fontFamily="@font/dangam"
+            android:textStyle="bold" />
+
+
+        <ImageView
+            android:id="@+id/imageWeatherIcon"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginVertical="8dp"
+            android:src="@drawable/ic_weather_unknown" />
+
+        <TextView
+            android:id="@+id/textTemperature"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="기온"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <!-- 현재 상태 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#FFFBD9"
+        android:padding="16dp"
+        android:layout_marginBottom="16dp"
+        android:elevation="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginHorizontal="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="현재 상태"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/textStayTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="지금 한 장소에서\n_ 시간 머물러 있어요"
+            android:layout_marginTop="8dp"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <!-- 오늘의 산책 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#FFFBD9"
+        android:padding="16dp"
+        android:elevation="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginHorizontal="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="오늘의 산책"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/textWalkTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="산책 시간:"
+            android:layout_marginTop="8dp"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/textWalkDistance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="산책 거리:"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+</LinearLayout>
