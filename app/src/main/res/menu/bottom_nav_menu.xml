@@ -1,0 +1,14 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_main"
+        android:icon="@drawable/ic_main"
+        android:title="홈" />
+    <item
+        android:id="@+id/navigation_walk"
+        android:icon="@drawable/ic_walk"
+        android:title="산책" />
+    <item
+        android:id="@+id/navigation_history"
+        android:icon="@drawable/ic_history"
+        android:title="기록" />
+</menu>
