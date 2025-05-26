@@ -3,16 +3,26 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:gravity="center"
-    android:padding="12dp"
-    android:layout_marginEnd="12dp">
+    android:padding="16dp"
+    android:layout_marginEnd="12dp"
+    android:elevation="4dp">
 
     <TextView
         android:id="@+id/textTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="09:00"
-        android:textSize="14sp"
-        android:textColor="#333333" />
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="#222222"
+        android:layout_marginBottom="4dp" />
+
+    <ImageView
+        android:id="@+id/imageWeatherIcon"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginBottom="4dp"
+        android:src="@drawable/ic_weather_unknown" />
 
     <TextView
         android:id="@+id/textCondition"
@@ -20,7 +30,8 @@
         android:layout_height="wrap_content"
         android:text="맑음"
         android:textSize="14sp"
-        android:textColor="#333333" />
+        android:textColor="#444444"
+        android:layout_marginBottom="2dp" />
 
     <TextView
         android:id="@+id/textTemperature"
@@ -28,21 +39,23 @@
         android:layout_height="wrap_content"
         android:text="17°C"
         android:textSize="14sp"
-        android:textColor="#333333" />
+        android:textColor="#444444"
+        android:layout_marginBottom="2dp" />
 
     <TextView
         android:id="@+id/textWind"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="5.4 m/s"
-        android:textSize="14sp"
-        android:textColor="#333333" />
+        android:textSize="12sp"
+        android:textColor="#666666"
+        android:layout_marginBottom="2dp" />
 
     <TextView
         android:id="@+id/textHumidity"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="60%"
-        android:textSize="14sp"
-        android:textColor="#333333" />
+        android:text="30%"
+        android:textSize="12sp"
+        android:textColor="#666666" />
 </LinearLayout>

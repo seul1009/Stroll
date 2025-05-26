@@ -12,6 +12,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -24,65 +25,73 @@ import com.mp.strollapp.data.weather.GpsUtil
 import com.mp.strollapp.data.weather.WeatherAPI
 import com.mp.strollapp.ui.weather.adapter.HourlyWeatherAdapter
 import com.mp.strollapp.ui.weather.model.HourlyWeather
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.coroutines.cancellation.CancellationException
 
 class WeatherDetailActivity : AppCompatActivity() {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var viewModel: WeatherViewModel
     private val LOCATION_PERMISSION_REQUEST_CODE = 1001
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_weather_detail)
 
+        viewModel = ViewModelProvider(this)[WeatherViewModel::class.java]
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
         if (!hasLocationPermission()) {
             requestLocationPermission()
             return
         }
 
-        startLocationAndWeatherProcess()
+        setupRecyclerView()
+        observeViewModel()
+        requestLocationAndWeather()
     }
 
-    private fun startLocationAndWeatherProcess() {
-        if (!isGpsEnabled()) {
+    private fun setupRecyclerView() {
+        findViewById<RecyclerView>(R.id.recyclerHourlyWeather).layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+    }
+
+    private fun observeViewModel() {
+        viewModel.weatherList.observe(this) { weatherList ->
+            findViewById<RecyclerView>(R.id.recyclerHourlyWeather).adapter =
+                HourlyWeatherAdapter(weatherList)
+
+            weatherList.firstOrNull()?.let { today ->
+                findViewById<TextView>(R.id.textWindSpeed).text = today.windSpeed
+                findViewById<TextView>(R.id.textHumidity).text = today.humidity
+                findViewById<TextView>(R.id.textAverageTemp).text = today.temperature
+            }
+        }
+
+        viewModel.address.observe(this) {
+            findViewById<TextView>(R.id.textLocation).text = it
+        }
+    }
+
+    private fun requestLocationAndWeather() {
+        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             showGpsDialog()
             return
         }
 
-        val recyclerView = findViewById<RecyclerView>(R.id.recyclerHourlyWeather)
-        recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
         lifecycleScope.launch {
-            try {
-                if (!hasLocationPermission()) {
-                    Log.e("WeatherDetail", "위치 권한이 없음. 위치 요청 중단")
-                    return@launch
-                }
+            if (!hasLocationPermission()) {
+                Log.e("WeatherDetail", "위치 권한이 없음. 위치 요청 중단")
+                return@launch
+            }
 
-                val location = try {
-                    if (ActivityCompat.checkSelfPermission(
-                            this@WeatherDetailActivity,
-                            Manifest.permission.ACCESS_FINE_LOCATION
-                        ) != PackageManager.PERMISSION_GRANTED
-                    ) {
-                        throw SecurityException("위치 권한 없음")
-                    }
-                    fusedLocationClient.getCurrentLocation(
-                        Priority.PRIORITY_HIGH_ACCURACY, null
-                    ).await()
-                } catch (ce: CancellationException) {
-                    Log.e("WeatherDetail", "Coroutine이 취소됨: ${ce.message}")
-                    null
-                } catch (se: SecurityException) {
-                    Log.e("WeatherDetail", "보안 예외 발생: ${se.message}")
-                    null
-                } ?: try {
+            val location = withContext(Dispatchers.IO) {
+                try {
                     if (ActivityCompat.checkSelfPermission(
                             this@WeatherDetailActivity,
                             Manifest.permission.ACCESS_FINE_LOCATION
@@ -91,90 +100,34 @@ class WeatherDetailActivity : AppCompatActivity() {
                         throw SecurityException("위치 권한 없음")
                     }
                     fusedLocationClient.lastLocation.await()
+                        ?: fusedLocationClient.getCurrentLocation(
+                            Priority.PRIORITY_HIGH_ACCURACY, null
+                        ).await()
                 } catch (e: Exception) {
-                    Log.e("WeatherDetail", "lastLocation 실패: ${e.message}")
+                    Log.e("WeatherDetail", "위치 요청 실패: ${e.message}")
                     null
                 }
-
-                if (location != null) {
-                    val grid = GpsUtil.convertGRID_GPS(location.latitude, location.longitude)
-                    val nx = grid["nx"] ?: 55
-                    val ny = grid["ny"] ?: 127
-
-                    try {
-                        val textLocation = findViewById<TextView>(R.id.textLocation)
-                        val geocoder = Geocoder(this@WeatherDetailActivity, Locale.getDefault())
-                        val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
-                        val address = addresses?.firstOrNull()?.getAddressLine(0) ?: "위치 알 수 없음"
-                        textLocation.text = address
-
-                    } catch (e: Exception) {
-                        Log.e("WeatherDetail", "주소 변환 실패: ${e.message}")
-                    }
-
-                    val weatherList = fetchWeatherList(nx, ny)
-                    recyclerView.adapter = HourlyWeatherAdapter(weatherList)
-
-
-                    val todayWeather = weatherList.firstOrNull()
-                    if (todayWeather != null) {
-                        val textWindSpeed = findViewById<TextView>(R.id.textWindSpeed)
-                        val textHumidity = findViewById<TextView>(R.id.textHumidity)
-                        val textAverageTemp = findViewById<TextView>(R.id.textAverageTemp)
-
-                        textWindSpeed.text = todayWeather.windSpeed
-                        textHumidity.text = todayWeather.humidity
-                        textAverageTemp.text = todayWeather.temperature
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("WeatherDetail", "위치 정보 불러오기 실패: ${e.message}")
             }
 
-        }
-    }
+            if (location != null) {
+                val grid = GpsUtil.convertGRID_GPS(location.latitude, location.longitude)
+                val nx = grid["nx"] ?: 55
+                val ny = grid["ny"] ?: 127
 
-    private suspend fun fetchWeatherList(nx: Int, ny: Int): List<HourlyWeather> {
-        return try {
-            val response = WeatherAPI.api.getForecast(
-                serviceKey = BuildConfig.WEATHER_API_KEY,
-                numOfRows = 1000,
-                pageNo = 1,
-                dataType = "JSON",
-                baseDate = getTodayDate(),
-                baseTime = getLatestBaseTime(),
-                nx = nx,
-                ny = ny
-            )
+                val geocoder = Geocoder(this@WeatherDetailActivity, Locale.getDefault())
+                val address = try {
+                    geocoder.getFromLocation(location.latitude, location.longitude, 1)
+                        ?.firstOrNull()?.getAddressLine(0)
+                } catch (e: Exception) {
+                    Log.e("WeatherDetail", "주소 변환 실패: ${e.message}")
+                    null
+                } ?: "위치 알 수 없음"
 
-            if (response.isSuccessful) {
-                val items = response.body()?.response?.body?.items?.item ?: return emptyList()
-                val grouped = items.groupBy { it.fcstTime }
-
-                grouped.mapNotNull { (time, list) ->
-                    val tmp = list.find { it.category == "TMP" }?.fcstValue
-                    val sky = list.find { it.category == "SKY" }?.fcstValue
-                    val pty = list.find { it.category == "PTY" }?.fcstValue
-                    val wsd = list.find { it.category == "WSD" }?.fcstValue
-                    val reh = list.find { it.category == "REH" }?.fcstValue
-
-                    if (tmp != null && sky != null && pty != null && wsd != null && reh != null) {
-                        HourlyWeather(
-                            time = "${time.substring(0, 2)}:${time.substring(2)}",
-                            condition = getWeatherCondition(sky, pty),
-                            temperature = "$tmp°C",
-                            windSpeed = "$wsd m/s",
-                            humidity = "$reh%"
-                        )
-                    } else null
-                }
+                viewModel.setAddress(address)
+                viewModel.fetchWeatherList(nx, ny, getTodayDate(), getLatestBaseTime())
             } else {
-                Log.e("WeatherDetail", "날씨 정보 불러오기 실패: ${response.message()}")
-                emptyList()
+                Log.e("WeatherDetail", "위치 정보가 null입니다.")
             }
-        } catch (e: Exception) {
-            Log.e("WeatherDetail", "API 호출 실패: ${e.message}")
-            emptyList()
         }
     }
 
@@ -202,7 +155,7 @@ class WeatherDetailActivity : AppCompatActivity() {
 
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startLocationAndWeatherProcess()
+                requestLocationAndWeather()
             } else {
                 Log.e("WeatherDetail", "위치 권한 거부됨")
             }
