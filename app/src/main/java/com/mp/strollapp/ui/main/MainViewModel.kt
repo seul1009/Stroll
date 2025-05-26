@@ -1,19 +1,31 @@
 package com.mp.strollapp.ui.main
 
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mp.strollapp.BuildConfig
+import com.mp.strollapp.data.model.WeatherItem
 import com.mp.strollapp.data.weather.WeatherService
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import androidx.lifecycle.MutableLiveData
-import com.mp.strollapp.BuildConfig
 
 class MainViewModel : ViewModel() {
 
-    val temperature = MutableLiveData<String>()
-    val weatherCondition = MutableLiveData<String>()
+    private val _temperature = MutableLiveData<String?>()
+    val temperature: LiveData<String?> get() = _temperature
+
+    private val _weatherCondition = MutableLiveData<String?>()
+    val weatherCondition: LiveData<String?> get() = _weatherCondition
+
+    private val _address = MutableLiveData<String>()
+    val address: LiveData<String> get() = _address
+
+    fun setAddress(newAddress: String) {
+        _address.value = newAddress
+    }
 
     private val retrofit = Retrofit.Builder()
         .baseUrl("https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/")
@@ -24,7 +36,7 @@ class MainViewModel : ViewModel() {
 
     fun fetchWeather(nx: Int, ny: Int, baseDate: String, baseTime: String) {
         viewModelScope.launch {
-            try{
+            try {
                 val response = service.getForecast(
                     serviceKey = BuildConfig.WEATHER_API_KEY,
                     numOfRows = 100,
@@ -38,15 +50,15 @@ class MainViewModel : ViewModel() {
 
                 if (response.isSuccessful) {
                     val items = response.body()?.response?.body?.items?.item
-                    val temp = items?.find { it.category == "TMP" }?.fcstValue
+
+                    val tmp = items?.find { it.category == "TMP" }?.fcstValue
                     val sky = items?.find { it.category == "SKY" }?.fcstValue
                     val pty = items?.find { it.category == "PTY" }?.fcstValue
 
-                    Log.d("WeatherAPI", "기온: $temp, SKY: $sky, PTY: $pty")
+                    Log.d("WeatherAPI", "기온: $tmp, SKY: $sky, PTY: $pty")
 
-                    if (temp != null) temperature.postValue("$temp°C")
-                    val condition = getWeatherCondition(sky, pty)
-                    weatherCondition.postValue(condition)
+                    _temperature.postValue(tmp?.let { "$it°C" })
+                    _weatherCondition.postValue(getWeatherCondition(sky, pty))
                 } else {
                     Log.e("WeatherAPI", "응답 실패: ${response.message()}")
                 }
@@ -55,6 +67,7 @@ class MainViewModel : ViewModel() {
             }
         }
     }
+
     private fun getWeatherCondition(sky: String?, pty: String?): String {
         return when (pty) {
             "1" -> "비"

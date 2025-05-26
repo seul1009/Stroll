@@ -16,7 +16,14 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import android.Manifest
+import android.content.Intent
+import android.provider.Settings
 import android.util.Log
+import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import com.mp.strollapp.ui.weather.WeatherDetailActivity
 import java.util.Calendar
 
 class MainFragment : Fragment() {
@@ -29,6 +36,8 @@ class MainFragment : Fragment() {
     private var stayStartTime: Long? = null
     private lateinit var textStayTime: TextView
 
+    private val _temperature = MutableLiveData<String?>()
+    val temperature: LiveData<String?> get() = _temperature
 
     override fun onCreateView(
         inflater: android.view.LayoutInflater,
@@ -41,7 +50,6 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
         val textTemperature = view.findViewById<TextView>(R.id.textTemperature)
@@ -50,12 +58,11 @@ class MainFragment : Fragment() {
         textStayTime = view.findViewById(R.id.textStayTime)
 
         viewModel.temperature.observe(viewLifecycleOwner) { temp ->
-            textTemperature.text = temp
+            textTemperature.text = temp ?: "--°C"
         }
 
         viewModel.weatherCondition.observe(viewLifecycleOwner) { condition ->
-            // SKY: 1=맑음, 3=구름많음, 4=흐림
-            // PTY: 0=없음, 1=비, 2=비/눈, 3=눈, 4=소나기
+            Log.d("날씨 조건", "condition = $condition")
             imageWeatherIcon.setImageResource(
                 when (condition) {
                     "맑음" -> R.drawable.ic_sunny
@@ -68,15 +75,12 @@ class MainFragment : Fragment() {
             )
         }
 
+        getCurrentLocationAndFetchWeather()
+
         layoutWeather.setOnClickListener {
-            val intent = android.content.Intent(
-                requireContext(),
-                com.mp.strollapp.ui.weather.WeatherDetailActivity::class.java
-            )
+            val intent = Intent(requireContext(), WeatherDetailActivity::class.java)
             startActivity(intent)
         }
-
-        getCurrentLocationAndFetchWeather()
     }
 
     private fun getCurrentLocationAndFetchWeather() {
@@ -93,6 +97,15 @@ class MainFragment : Fragment() {
             return
         }
 
+        val locationManager = context?.getSystemService(android.content.Context.LOCATION_SERVICE) as android.location.LocationManager
+        val isGpsEnabled = locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER)
+        val isNetworkEnabled = locationManager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER)
+
+        if (!isGpsEnabled && !isNetworkEnabled) {
+            Log.e("MainFragment", "GPS/Network 위치 모두 꺼져 있음 - 설정에서 켜주세요")
+            return
+        }
+
         val cancellationTokenSource = com.google.android.gms.tasks.CancellationTokenSource()
 
         fusedLocationClient.getCurrentLocation(
@@ -100,27 +113,36 @@ class MainFragment : Fragment() {
             cancellationTokenSource.token
         ).addOnSuccessListener { location ->
             if (location == null) {
-                Log.e("MainFragment", "getCurrentLocation가 null입니다.")
+                Log.e("MainFragment", "실시간 위치 요청 실패 (null 반환)")
+                // 사용자에게 안내
+                showLocationFailedDialog()
                 return@addOnSuccessListener
             }
 
+            // 위치 정상 수신 시
             val lat = location.latitude
             val lon = location.longitude
-            Log.d("GPS", "실제 위도/경도: lat=$lat, lon=$lon")
             val grid = GpsUtil.convertGRID_GPS(lat, lon)
-            Log.d("GPS", "변환된 격자: nx=${grid["nx"]}, ny=${grid["ny"]}")
-
             val nx = grid["nx"] ?: 60
             val ny = grid["ny"] ?: 127
-
             val baseDate = SimpleDateFormat("yyyyMMdd", Locale.KOREA).format(Date())
             val baseTime = getLatestBaseTime()
-
             viewModel.fetchWeather(nx, ny, baseDate, baseTime)
         }.addOnFailureListener {
-            Log.e("MainFragment", "현재 위치 요청 실패: ${it.message}")
-
+            Log.e("MainFragment", "실시간 위치 요청 중 오류: ${it.message}")
+            showLocationFailedDialog()
         }
+    }
+
+    private fun showLocationFailedDialog() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("위치 수신 실패")
+            .setMessage("현재 위치 정보를 받아올 수 없습니다.\nWi-Fi 또는 GPS 신호가 약할 수 있습니다.")
+            .setPositiveButton("설정으로 이동") { _, _ ->
+                startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+            }
+            .setNegativeButton("닫기", null)
+            .show()
     }
 
     private fun getLatestBaseTime(): String {
