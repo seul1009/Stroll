@@ -70,7 +70,9 @@ class WeatherViewModel : ViewModel() {
                     condition = getWeatherCondition(sky, pty),
                     temperature = "$tmp°C",
                     windSpeed = "$wsd m/s",
-                    humidity = "$reh%"
+                    humidity = "$reh%",
+                    sky = sky,
+                    pty = pty
                 )
             } else null
         }

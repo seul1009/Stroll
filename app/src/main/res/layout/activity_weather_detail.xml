@@ -3,8 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginTop="50dp"
-    android:layout_marginBottom="50dp"
-    android:padding="16dp">
+    android:layout_marginBottom="50dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -18,33 +17,27 @@
             android:layout_height="wrap_content"
             android:text="위치"
             android:textSize="16sp"
-            android:textColor="#333333"
-            android:layout_marginBottom="8dp" />
-
-        <TextView
-            android:id="@+id/textTempLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="날씨 설명"
-            android:textSize="48sp"
-            android:textStyle="bold"
-            android:textColor="#111111"
-            android:layout_marginBottom="8dp" />
-
-        <ImageView
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:layout_marginBottom="8dp"
-            android:src="@drawable/ic_sunny" />
+            android:textColor="#383838"
+            android:fontFamily="@font/dangam"
+            android:layout_marginBottom="20dp" />
 
         <TextView
             android:id="@+id/textWeatherComment"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="날씨 설명"
-            android:textSize="18sp"
+            android:textSize="35sp"
             android:textStyle="bold"
-            android:layout_marginBottom="20dp" />
+            android:fontFamily="@font/dangam"
+            android:textColor="#383838"
+            android:layout_marginBottom="15dp"
+            android:gravity="center_horizontal" />
+
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginBottom="15dp"
+            android:src="@drawable/ic_sunny" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -154,8 +147,15 @@
             android:text="시간대별 날씨"
             android:textSize="16sp"
             android:textStyle="bold"
+            android:fontFamily="@font/dangam"
             android:layout_marginTop="40dp"
             android:layout_marginBottom="10dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#CCCCCC"
+            android:layout_marginBottom="8dp"/>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerHourlyWeather"
@@ -165,5 +165,11 @@
             android:nestedScrollingEnabled="false"
             android:overScrollMode="never"
             android:scrollbars="horizontal"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#CCCCCC"
+            android:layout_marginBottom="8dp"/>
     </LinearLayout>
 </ScrollView>

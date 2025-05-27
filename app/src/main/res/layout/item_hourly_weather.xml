@@ -6,7 +6,6 @@
     android:padding="16dp"
     android:layout_marginEnd="12dp"
     android:elevation="4dp">
-
     <TextView
         android:id="@+id/textTime"
         android:layout_width="wrap_content"
