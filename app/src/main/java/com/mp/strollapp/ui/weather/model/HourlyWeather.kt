@@ -8,6 +8,8 @@ data class HourlyWeather(
     val temperature: String,
     val windSpeed: String,
     val humidity: String,
+    val sky: String,
+    val pty: String
 )
 
 fun getWeatherIcon(condition: String): Int {

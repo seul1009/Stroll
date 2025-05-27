@@ -38,6 +38,7 @@ class WeatherDetailActivity : AppCompatActivity() {
     private lateinit var viewModel: WeatherViewModel
     private val LOCATION_PERMISSION_REQUEST_CODE = 1001
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_weather_detail)
@@ -69,6 +70,20 @@ class WeatherDetailActivity : AppCompatActivity() {
                 findViewById<TextView>(R.id.textWindSpeed).text = today.windSpeed
                 findViewById<TextView>(R.id.textHumidity).text = today.humidity
                 findViewById<TextView>(R.id.textAverageTemp).text = today.temperature
+
+                val weatherText = when (today.pty) {
+                    "1" -> "현재 비가 와요"
+                    "2" -> "현재 비/눈이 와요 "
+                    "3" -> "지금 눈이 오고 있어요 !"
+                    "4" -> "현재 소나기가 내려요"
+                    else -> when (today.sky) {
+                        "1" -> "날씨가 좋네요! \n 나가서 산책 어때요?"
+                        "3" -> "구름이 많네요 \n 그래도 나가서 산책 어때요?"
+                        "4" -> "지금은 흐리네요"
+                        else -> "날씨 정보 없음"
+                    }
+                }
+                findViewById<TextView>(R.id.textWeatherComment).text = weatherText
             }
         }
 
@@ -190,18 +205,4 @@ class WeatherDetailActivity : AppCompatActivity() {
         return times.lastOrNull { current >= it.toInt() } ?: "0200"
     }
 
-    private fun getWeatherCondition(sky: String, pty: String): String {
-        return when (pty) {
-            "1" -> "비"
-            "2" -> "비/눈"
-            "3" -> "눈"
-            "4" -> "소나기"
-            else -> when (sky) {
-                "1" -> "맑음"
-                "3" -> "구름많음"
-                "4" -> "흐림"
-                else -> "알 수 없음"
-            }
-        }
-    }
 }

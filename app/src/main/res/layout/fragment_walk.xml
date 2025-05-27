@@ -16,7 +16,7 @@
             android:id="@+id/startCard"
             android:orientation="vertical"
             android:background="#CCFFFFFF"
-            android:padding="24dp"
+            android:padding="30dp"
             android:elevation="8dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -36,6 +36,7 @@
             <Button
                 android:id="@+id/startButton"
                 android:text="시작하기"
+                android:padding="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:backgroundTint="#FFF3BF"
@@ -50,43 +51,71 @@
         <LinearLayout
             android:id="@+id/walkCard"
             android:visibility="gone"
-            android:orientation="horizontal"
-            android:padding="16dp"
-            android:layout_width="wrap_content"
+            android:orientation="vertical"
+            android:padding="10dp"
+            android:layout_width="270dp"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:layout_gravity="top">
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginTop="30dp"
+            android:background="@drawable/walk_card_bg">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/timeText"
-                android:text="00:00"
-                android:textColor="#FFFFFF"
-                android:layout_marginEnd="16dp" />
+                android:orientation="horizontal">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/distanceText"
-                android:text="0.0 km"
-                android:textColor="#FFFFFF"
-                android:layout_marginEnd="16dp" />
+                <TextView
+                    android:id="@+id/timeText"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="10:05"
+                    android:textColor="#FFFFFF"
+                    android:textSize="15sp" />
 
+                <TextView
+                    android:id="@+id/distanceText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="1km"
+                    android:textColor="#FFFFFF"
+                    android:textSize="15sp" />
+            </LinearLayout>
+
+            <!-- 2행: 산책 중 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="산책 중 .."
                 android:textColor="#FFFFFF"
-                android:layout_marginEnd="16dp" />
+                android:textSize="17sp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="15dp"/>
 
-            <Button
-                android:id="@+id/stopButton"
-                android:text="중단"
-                android:layout_width="wrap_content"
+            <!-- 3행: 중단 버튼 -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:backgroundTint="#FFF3BF"
-                android:textColor="#000000" />
+                android:gravity="end">
+
+                <Button
+                    android:id="@+id/stopButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp"
+                    android:textSize="13sp"
+                    android:text="중단"
+                    android:backgroundTint="#FFF3BF"
+                    android:textColor="#000000" />
+            </LinearLayout>
         </LinearLayout>
     </FrameLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

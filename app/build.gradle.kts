@@ -4,6 +4,8 @@ import java.io.FileInputStream
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    id("org.jetbrains.kotlin.kapt")
+    alias(libs.plugins.compose.compiler)
 }
 
 val localProperties = Properties().apply {
@@ -52,10 +54,10 @@ android {
         compose = true
         buildConfig = true
     }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.4"
-    }
+//
+//    composeOptions {
+//        kotlinCompilerExtensionVersion = "1.5.4"
+//    }
 }
 
 dependencies {
@@ -71,6 +73,8 @@ dependencies {
     implementation(libs.androidx.ui.android)
     implementation(libs.androidx.foundation.layout.android)
     implementation(libs.play.services.location)
+    implementation(libs.androidx.room.common.jvm)
+    implementation(libs.androidx.room.runtime.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -86,6 +90,10 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-simplexml:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4")
+    implementation("androidx.room:room-runtime:2.7.1")
+    kapt("androidx.room:room-compiler:2.7.1")
+    implementation("androidx.room:room-ktx:2.7.1")
+    implementation("androidx.compose.compiler:compiler:1.5.11")
 
     // 기상청 API 연결 라이브러리
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
