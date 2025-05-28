@@ -39,6 +39,10 @@ class MainFragment : Fragment() {
     private val _temperature = MutableLiveData<String?>()
     val temperature: LiveData<String?> get() = _temperature
 
+    private lateinit var locationCallback: com.google.android.gms.location.LocationCallback
+    private lateinit var locationRequest: com.google.android.gms.location.LocationRequest
+
+
     override fun onCreateView(
         inflater: android.view.LayoutInflater,
         container: android.view.ViewGroup?,
@@ -81,6 +85,66 @@ class MainFragment : Fragment() {
             val intent = Intent(requireContext(), WeatherDetailActivity::class.java)
             startActivity(intent)
         }
+
+        locationRequest = com.google.android.gms.location.LocationRequest.create().apply {
+            interval = 60_000L            // 위치 요청 주기 (60초)
+            fastestInterval = 30_000L     // 가장 빠른 위치 갱신 간격
+            priority = com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
+        }
+
+        locationCallback = object : com.google.android.gms.location.LocationCallback() {
+            override fun onLocationResult(result: com.google.android.gms.location.LocationResult) {
+                val location = result.lastLocation ?: return
+                val lat = location.latitude
+                val lon = location.longitude
+
+                // 거리 비교
+                if (lastLat != null && lastLon != null) {
+                    val distance = calculateDistance(lastLat!!, lastLon!!, lat, lon)
+                    if (distance < 30) {
+                        if (stayStartTime == null) stayStartTime = System.currentTimeMillis()
+                    } else {
+                        stayStartTime = System.currentTimeMillis()
+                        lastLat = lat
+                        lastLon = lon
+                    }
+                } else {
+                    lastLat = lat
+                    lastLon = lon
+                    stayStartTime = System.currentTimeMillis()
+                }
+
+                stayStartTime?.let {
+                    val elapsedMillis = System.currentTimeMillis() - it
+                    val minutes = (elapsedMillis / 1000) / 60
+                    val hours = minutes / 60
+                    val remainingMinutes = minutes % 60
+                    val formatted = if (hours > 0) "${hours}시간 ${remainingMinutes}분" else "${remainingMinutes}분"
+                    textStayTime.text = "지금 한 장소에서\n$formatted 머물러 있어요"
+                }
+            }
+        }
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            fusedLocationClient.requestLocationUpdates(
+                locationRequest,
+                locationCallback,
+                android.os.Looper.getMainLooper()
+            )
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
     private fun getCurrentLocationAndFetchWeather() {
@@ -114,7 +178,6 @@ class MainFragment : Fragment() {
         ).addOnSuccessListener { location ->
             if (location == null) {
                 Log.e("MainFragment", "실시간 위치 요청 실패 (null 반환)")
-                // 사용자에게 안내
                 showLocationFailedDialog()
                 return@addOnSuccessListener
             }
@@ -122,6 +185,32 @@ class MainFragment : Fragment() {
             // 위치 정상 수신 시
             val lat = location.latitude
             val lon = location.longitude
+
+            if (lastLat != null && lastLon != null) {
+                val distance = calculateDistance(lastLat!!, lastLon!!, lat, lon)
+
+                if (distance < 30) {
+                    if (stayStartTime == null) stayStartTime = System.currentTimeMillis()
+                } else {
+                    stayStartTime = System.currentTimeMillis()
+                    lastLat = lat
+                    lastLon = lon
+                }
+            } else {
+                lastLat = lat
+                lastLon = lon
+                stayStartTime = System.currentTimeMillis()
+            }
+
+            stayStartTime?.let {
+                val elapsedMillis = System.currentTimeMillis() - it
+                val minutes = (elapsedMillis / 1000) / 60
+                val hours = minutes / 60
+                val remainingMinutes = minutes % 60
+                val formatted = if (hours > 0) "${hours}시간 ${remainingMinutes}분" else "${remainingMinutes}분"
+                textStayTime.text = "지금 한 장소에서\n$formatted 머물러 있어요"
+            }
+
             val grid = GpsUtil.convertGRID_GPS(lat, lon)
             val nx = grid["nx"] ?: 60
             val ny = grid["ny"] ?: 127
@@ -132,6 +221,15 @@ class MainFragment : Fragment() {
             Log.e("MainFragment", "실시간 위치 요청 중 오류: ${it.message}")
             showLocationFailedDialog()
         }
+    }
+
+    private fun calculateDistance(
+        lat1: Double, lon1: Double,
+        lat2: Double, lon2: Double
+    ): Float {
+        val result = FloatArray(1)
+        android.location.Location.distanceBetween(lat1, lon1, lat2, lon2, result)
+        return result[0] // meter 단위 거리
     }
 
     private fun showLocationFailedDialog() {

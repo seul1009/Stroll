@@ -10,11 +10,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="산책 기록"
-        android:textSize="20sp"
-        android:fontFamily="@font/dangam"
+        android:textSize="30sp"
+        android:fontFamily="@font/dangam_bold"
+        android:layout_gravity="center"
         android:textStyle="bold"
         android:textColor="#333333"
-        android:layout_marginBottom="12dp" />
+        android:layout_margin="15dp" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
