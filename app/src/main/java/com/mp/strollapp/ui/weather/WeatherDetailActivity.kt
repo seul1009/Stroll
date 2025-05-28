@@ -8,6 +8,7 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -78,12 +79,27 @@ class WeatherDetailActivity : AppCompatActivity() {
                     "4" -> "현재 소나기가 내려요"
                     else -> when (today.sky) {
                         "1" -> "날씨가 좋네요! \n 나가서 산책 어때요?"
-                        "3" -> "구름이 많네요 \n 그래도 나가서 산책 어때요?"
+                        "3" -> "구름이 많아요 \n 그래도 산책하기 좋아요 !"
                         "4" -> "지금은 흐리네요"
                         else -> "날씨 정보 없음"
                     }
                 }
                 findViewById<TextView>(R.id.textWeatherComment).text = weatherText
+
+                val imageWeather = findViewById<ImageView>(R.id.imageWeather)
+                val iconRes = when (today.pty) {
+                    "1" -> R.drawable.ic_rainy
+                    "2" -> R.drawable.ic_snow
+                    "3" -> R.drawable.ic_snow
+                    "4" -> R.drawable.ic_rainy
+                    else -> when (today.sky) {
+                        "1" -> R.drawable.ic_sunny
+                        "3" -> R.drawable.ic_cloudy
+                        "4" -> R.drawable.ic_sunny_cloudy
+                        else -> R.drawable.ic_weather_unknown
+                    }
+                }
+                imageWeather.setImageResource(iconRes)
             }
         }
 

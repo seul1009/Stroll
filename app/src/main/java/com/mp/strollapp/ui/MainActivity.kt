@@ -14,11 +14,14 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.mp.strollapp.R
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
+import com.mp.strollapp.service.LocationForegroundService
 
 class MainActivity : AppCompatActivity() {
 
     private val LOCATION_PERMISSION_REQUEST_CODE = 1001
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +33,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         checkPermissionAndGps()
+
     }
 
     private fun checkPermissionAndGps() {
@@ -44,6 +48,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         setupBottomNav()
+
+        // Forground 서비스 시작
+        val serviceIntent = Intent(this, LocationForegroundService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent)
+        } else {
+            startService(serviceIntent)
+        }
     }
 
     private fun hasLocationPermission(): Boolean {
