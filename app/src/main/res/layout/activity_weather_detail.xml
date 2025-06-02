@@ -59,15 +59,15 @@
                     android:layout_height="32dp"
                     android:src="@drawable/ic_temp" />
                 <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="평균기온"
+                    android:textSize="12sp" />
+                <TextView
                     android:id="@+id/textAverageTemp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="17°"
-                    android:textSize="12sp" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="평균기온"
                     android:textSize="12sp" />
             </LinearLayout>
 
@@ -84,12 +84,13 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="보통"
+                    android:text="강수확률"
                     android:textSize="12sp" />
                 <TextView
+                    android:id="@+id/textRain"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="강수확률"
+                    android:text="보통"
                     android:textSize="12sp" />
             </LinearLayout>
 
@@ -104,15 +105,15 @@
                     android:layout_height="32dp"
                     android:src="@drawable/ic_humidity"/>
                 <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="습도"
+                    android:textSize="12sp" />
+                <TextView
                     android:id="@+id/textHumidity"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="65%"
-                    android:textSize="12sp" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="습도"
                     android:textSize="12sp" />
             </LinearLayout>
 
@@ -127,15 +128,15 @@
                     android:layout_height="32dp"
                     android:src="@drawable/ic_wind"/>
                 <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="풍속"
+                    android:textSize="12sp" />
+                <TextView
                     android:id="@+id/textWindSpeed"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="4.2 m/s"
-                    android:textSize="12sp" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="풍속"
                     android:textSize="12sp" />
             </LinearLayout>
 

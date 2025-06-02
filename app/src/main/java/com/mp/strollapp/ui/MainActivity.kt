@@ -26,14 +26,17 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        checkPermissionAndGps()
     }
 
     override fun onResume() {
         super.onResume()
         checkPermissionAndGps()
 
+    }
+
+    override fun onStart(){
+        super.onStart()
+        checkPermissionAndGps()
     }
 
     private fun checkPermissionAndGps() {
@@ -87,11 +90,20 @@ class MainActivity : AppCompatActivity() {
                 // 권한 요청 시도 횟수 저장
                 prefs.edit().putInt("location_permission_attempts", attempts + 1).apply()
 
+                val permissions = mutableListOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) { // Android 14 이상
+                    permissions.add(Manifest.permission.FOREGROUND_SERVICE_LOCATION)
+                }
+
                 ActivityCompat.requestPermissions(
                     this,
-                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                    permissions.toTypedArray(),
                     LOCATION_PERMISSION_REQUEST_CODE
                 )
+
             }
         } else {
             builder.setPositiveButton("설정으로 이동") { _, _ ->
