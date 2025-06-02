@@ -63,8 +63,9 @@ class WeatherViewModel : ViewModel() {
             val pty = list.find { it.category == "PTY" }?.fcstValue
             val wsd = list.find { it.category == "WSD" }?.fcstValue
             val reh = list.find { it.category == "REH" }?.fcstValue
+            val rain = list.find { it.category == "POP"}?.fcstValue
 
-            if (tmp != null && sky != null && pty != null && wsd != null && reh != null) {
+            if (tmp != null && sky != null && pty != null && wsd != null && reh != null && rain != null) {
                 HourlyWeather(
                     time = "${time.substring(0, 2)}:${time.substring(2)}",
                     condition = getWeatherCondition(sky, pty),
@@ -72,7 +73,9 @@ class WeatherViewModel : ViewModel() {
                     windSpeed = "$wsd m/s",
                     humidity = "$reh%",
                     sky = sky,
-                    pty = pty
+                    pty = pty,
+                    rain = rain
+
                 )
             } else null
         }

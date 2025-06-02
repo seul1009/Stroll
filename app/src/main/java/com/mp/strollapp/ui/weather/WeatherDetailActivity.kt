@@ -70,6 +70,7 @@ class WeatherDetailActivity : AppCompatActivity() {
             weatherList.firstOrNull()?.let { today ->
                 findViewById<TextView>(R.id.textWindSpeed).text = today.windSpeed
                 findViewById<TextView>(R.id.textHumidity).text = today.humidity
+                findViewById<TextView>(R.id.textRain).text = "${today.rain}%"
                 findViewById<TextView>(R.id.textAverageTemp).text = today.temperature
 
                 val weatherText = when (today.pty) {
@@ -145,7 +146,7 @@ class WeatherDetailActivity : AppCompatActivity() {
                 val nx = grid["nx"] ?: 55
                 val ny = grid["ny"] ?: 127
 
-                val geocoder = Geocoder(this@WeatherDetailActivity, Locale.getDefault())
+                val geocoder = Geocoder(this@WeatherDetailActivity, Locale.KOREAN)
                 val address = try {
                     geocoder.getFromLocation(location.latitude, location.longitude, 1)
                         ?.firstOrNull()?.getAddressLine(0)

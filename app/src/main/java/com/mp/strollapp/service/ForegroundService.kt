@@ -46,22 +46,14 @@ class LocationForegroundService : Service() {
             }
         }
 
-        startForegroundService()
     }
 
-    fun createNotificationChannel(context: Context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val serviceChannel = NotificationChannel(
-                "location_channel",
-                "위치 추적 서비스",
-                NotificationManager.IMPORTANCE_DEFAULT
-            )
-            val manager = context.getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(serviceChannel)
-        }
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        startForegroundAndLocationUpdates()
+        return START_STICKY
     }
 
-    private fun startForegroundService() {
+    private fun startForegroundAndLocationUpdates() {
         val channelId = "location_channel"
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("Stroll 위치 감지 중")
@@ -80,6 +72,18 @@ class LocationForegroundService : Service() {
                 locationCallback,
                 Looper.getMainLooper()
             )
+        }
+    }
+
+    fun createNotificationChannel(context: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val serviceChannel = NotificationChannel(
+                "location_channel",
+                "위치 추적 서비스",
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
+            val manager = context.getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(serviceChannel)
         }
     }
 
