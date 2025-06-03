@@ -6,13 +6,16 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mp.strollapp.BuildConfig
-import com.mp.strollapp.data.model.WeatherItem
 import com.mp.strollapp.data.weather.WeatherService
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import com.mp.strollapp.data.walk.WalkRecordDatabase
+import com.mp.strollapp.data.walk.WalkRecordEntity
 
-class MainViewModel : ViewModel() {
+class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _temperature = MutableLiveData<String?>()
     val temperature: LiveData<String?> get() = _temperature
@@ -25,6 +28,21 @@ class MainViewModel : ViewModel() {
 
     fun setAddress(newAddress: String) {
         _address.value = newAddress
+    }
+
+    private val walkRecordDao = WalkRecordDatabase.getInstance(application).walkRecordDao()
+
+    private val _todayWalkSummary = MutableLiveData<Pair<Int, Int>>()
+    val todayWalkSummary: LiveData<Pair<Int, Int>> get() = _todayWalkSummary
+
+    fun fetchTodayWalkSummary() {
+        viewModelScope.launch {
+            val records: List<WalkRecordEntity> = walkRecordDao.getTodayRecords()
+            val totalDistance = records.sumOf { it.distance }.toInt()
+            val totalDuration = records.sumOf { it.duration }
+
+            _todayWalkSummary.postValue(Pair(totalDistance, totalDuration))
+        }
     }
 
     private val retrofit = Retrofit.Builder()

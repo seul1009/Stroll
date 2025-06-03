@@ -18,12 +18,18 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.mp.strollapp.R
+import kotlinx.coroutines.launch
 
 class LocationForegroundService : Service() {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationRequest: LocationRequest
     private lateinit var locationCallback: LocationCallback
+    private var previousLocation: android.location.Location? = null
+    private var totalDistance = 0f
+    private var seconds = 0
+    private val handler = android.os.Handler(Looper.getMainLooper())
+    private lateinit var runnable: Runnable
 
     override fun onCreate() {
         super.onCreate()
@@ -41,10 +47,36 @@ class LocationForegroundService : Service() {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 val location = result.lastLocation ?: return
-                Log.d("ForegroundService", "위치: ${location.latitude}, ${location.longitude}")
-                // TODO: 여기서 위치 기반 처리 로직 삽입 (DB 저장, 거리 계산 등)
+
+                previousLocation?.let {
+                    val distance = it.distanceTo(location)
+                    if (distance > 2f) {
+                        totalDistance += distance
+
+                        // SharedPreferences에 거리 저장
+                        val prefs = getSharedPreferences("walk_state", Context.MODE_PRIVATE)
+                        prefs.edit().putFloat("prev_distance", totalDistance).apply()
+                    }
+                }
+                previousLocation = location
+
+                Log.d("ForegroundService", "거리: ${totalDistance.toInt()} m, 시간: ${seconds}s")
             }
         }
+
+
+        runnable = object : Runnable {
+            override fun run() {
+                seconds++
+
+                // SharedPreferences에 시간 저장
+                val prefs = getSharedPreferences("walk_state", Context.MODE_PRIVATE)
+                prefs.edit().putInt("prev_seconds", seconds).apply()
+
+                handler.postDelayed(this, 1000)
+            }
+        }
+        handler.post(runnable)
 
     }
 
@@ -92,5 +124,8 @@ class LocationForegroundService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         fusedLocationClient.removeLocationUpdates(locationCallback)
+        handler.removeCallbacks(runnable)
+
+
     }
 }

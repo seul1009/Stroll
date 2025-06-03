@@ -23,7 +23,10 @@ import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
+import com.mp.strollapp.data.walk.WalkRecordDatabase
 import com.mp.strollapp.ui.weather.WeatherDetailActivity
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 class MainFragment : Fragment() {
@@ -51,6 +54,18 @@ class MainFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_main, container, false)
     }
 
+    private fun calculateDistance(
+        lat1: Double, lon1: Double,
+        lat2: Double, lon2: Double
+    ): Float {
+        val result = FloatArray(1)
+        android.location.Location.distanceBetween(lat1, lon1, lat2, lon2, result)
+        return result[0] // meter 단위 거리
+    }
+
+    private lateinit var textWalkDistance: TextView
+    private lateinit var textWalkTime: TextView
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -60,6 +75,8 @@ class MainFragment : Fragment() {
         val imageWeatherIcon = view.findViewById<ImageView>(R.id.imageWeatherIcon)
         val layoutWeather = view.findViewById<View>(R.id.layoutWeather)
         textStayTime = view.findViewById(R.id.textStayTime)
+        textWalkTime = view.findViewById(R.id.textWalkTime)
+        textWalkDistance = view.findViewById(R.id.textWalkDistance)
 
         viewModel.temperature.observe(viewLifecycleOwner) { temp ->
             textTemperature.text = temp ?: "--°C"
@@ -79,6 +96,17 @@ class MainFragment : Fragment() {
             )
         }
 
+        viewModel.todayWalkSummary.observe(viewLifecycleOwner) { (distance, duration) ->
+            textWalkDistance.text = "$distance m"
+
+            val minutes = duration / 60
+            val hours = minutes / 60
+            val rem = minutes % 60
+            textWalkTime.text = if (hours > 0) "${hours}시간 ${rem}분" else "${rem}분"
+        }
+
+
+        viewModel.fetchTodayWalkSummary()
         getCurrentLocationAndFetchWeather()
 
         layoutWeather.setOnClickListener {
@@ -92,6 +120,9 @@ class MainFragment : Fragment() {
             priority = com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
         }
 
+        val MIN_STAY_DISTANCE = 10 // 10m 이상
+        val MIN_STAY_DURATION = 3 * 60 * 1000L // 3분 이상 (머무름 기준)
+
         locationCallback = object : com.google.android.gms.location.LocationCallback() {
             override fun onLocationResult(result: com.google.android.gms.location.LocationResult) {
                 val location = result.lastLocation ?: return
@@ -101,30 +132,39 @@ class MainFragment : Fragment() {
                 // 거리 비교
                 if (lastLat != null && lastLon != null) {
                     val distance = calculateDistance(lastLat!!, lastLon!!, lat, lon)
-                    if (distance < 30) {
-                        if (stayStartTime == null) stayStartTime = System.currentTimeMillis()
+
+                    if (distance < MIN_STAY_DISTANCE) {
+                        if (stayStartTime == null)
+                            stayStartTime = System.currentTimeMillis()
                     } else {
-                        stayStartTime = System.currentTimeMillis()
+                        stayStartTime = null
+                        textStayTime.text = "지금 어디론가 이동 중이시네요 !"
                         lastLat = lat
                         lastLon = lon
+                        return
                     }
                 } else {
+                    // 최초 측정
                     lastLat = lat
                     lastLon = lon
                     stayStartTime = System.currentTimeMillis()
                 }
-
+                // 머무름 시간 계산
                 stayStartTime?.let {
                     val elapsedMillis = System.currentTimeMillis() - it
-                    val minutes = (elapsedMillis / 1000) / 60
-                    val hours = minutes / 60
-                    val remainingMinutes = minutes % 60
-                    val formatted = if (hours > 0) "${hours}시간 ${remainingMinutes}분" else "${remainingMinutes}분"
-                    textStayTime.text = "지금 한 장소에서\n$formatted 머물러 있어요"
+
+                    if (elapsedMillis > MIN_STAY_DURATION) {
+                        val minutes = (elapsedMillis / 1000) / 60
+                        val hours = minutes / 60
+                        val remainingMinutes = minutes % 60
+                        val formatted = if (hours > 0) "${hours}시간 ${remainingMinutes}분" else "${remainingMinutes}분"
+                        textStayTime.text = "지금 한 장소에서\n$formatted 머물러 있어요"
+                    } else {
+                        textStayTime.text = ""
+                    }
                 }
             }
         }
-
     }
 
     override fun onResume() {
@@ -223,15 +263,6 @@ class MainFragment : Fragment() {
         }
     }
 
-    private fun calculateDistance(
-        lat1: Double, lon1: Double,
-        lat2: Double, lon2: Double
-    ): Float {
-        val result = FloatArray(1)
-        android.location.Location.distanceBetween(lat1, lon1, lat2, lon2, result)
-        return result[0] // meter 단위 거리
-    }
-
     private fun showLocationFailedDialog() {
         AlertDialog.Builder(requireContext())
             .setTitle("위치 수신 실패")
@@ -258,5 +289,6 @@ class MainFragment : Fragment() {
 
         return result
     }
+
 }
 

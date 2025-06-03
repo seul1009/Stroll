@@ -52,7 +52,6 @@ class MainActivity : AppCompatActivity() {
 
         setupBottomNav()
 
-        // Forground 서비스 시작
         val serviceIntent = Intent(this, LocationForegroundService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent)
@@ -87,14 +86,13 @@ class MainActivity : AppCompatActivity() {
 
         if (attempts < 2) {
             builder.setPositiveButton("허용") { _, _ ->
-                // 권한 요청 시도 횟수 저장
                 prefs.edit().putInt("location_permission_attempts", attempts + 1).apply()
 
                 val permissions = mutableListOf(
                     Manifest.permission.ACCESS_FINE_LOCATION
                 )
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) { // Android 14 이상
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     permissions.add(Manifest.permission.FOREGROUND_SERVICE_LOCATION)
                 }
 
