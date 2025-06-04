@@ -41,7 +41,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="오늘의 날씨"
-            android:textSize="18sp"
+            android:textSize="20sp"
             android:fontFamily="@font/dangam"
             android:textStyle="bold" />
 
@@ -78,8 +78,9 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
             android:text="현재 상태"
-            android:textSize="16sp"
+            android:textSize="17sp"
             android:textStyle="bold"
             android:fontFamily="@font/dangam" />
 
@@ -88,8 +89,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="지금 한 장소에서\n_ 시간 머물러 있어요"
-            android:layout_marginTop="8dp"
-            android:textSize="14sp"
+
+            android:textSize="16sp"
             android:fontFamily="@font/dangam"/>
     </LinearLayout>
 
@@ -108,7 +109,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="오늘의 산책"
-            android:textSize="16sp"
+            android:textSize="17sp"
             android:textStyle="bold"
             android:fontFamily="@font/dangam"/>
 
@@ -116,17 +117,18 @@
             android:id="@+id/textWalkTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="10dp"
             android:text="산책 시간:"
-            android:textSize="14sp"
+            android:textSize="16sp"
             android:fontFamily="@font/dangam"/>
 
         <TextView
             android:id="@+id/textWalkDistance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
             android:text="산책 거리:"
-            android:textSize="14sp"
+            android:textSize="16sp"
             android:fontFamily="@font/dangam"/>
     </LinearLayout>
 

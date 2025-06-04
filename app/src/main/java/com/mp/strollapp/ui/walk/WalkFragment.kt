@@ -327,12 +327,15 @@ class WalkFragment : Fragment(), OnMapReadyCallback {
 
     override fun onPause() {
         super.onPause()
-        if (isTracking.not()) {
+
+        if (!isTracking) {
             if (::locationCallback.isInitialized) {
                 fusedLocationClient.removeLocationUpdates(locationCallback)
             }
-            timerHandler.removeCallbacks(timerRunnable)
+
+            if (::timerRunnable.isInitialized) {
+                timerHandler.removeCallbacks(timerRunnable)
+            }
         }
     }
-
 }
