@@ -97,12 +97,12 @@ class MainFragment : Fragment() {
         }
 
         viewModel.todayWalkSummary.observe(viewLifecycleOwner) { (distance, duration) ->
-            textWalkDistance.text = "$distance m"
+            textWalkDistance.text = "산책 거리 : $distance m"
 
             val minutes = duration / 60
             val hours = minutes / 60
             val rem = minutes % 60
-            textWalkTime.text = if (hours > 0) "${hours}시간 ${rem}분" else "${rem}분"
+            textWalkTime.text = if (hours > 0) "산책 시간 : ${hours}시간 ${rem}분" else "산책 시간 : ${rem}분"
         }
 
 
@@ -138,7 +138,7 @@ class MainFragment : Fragment() {
                             stayStartTime = System.currentTimeMillis()
                     } else {
                         stayStartTime = null
-                        textStayTime.text = "지금 어디론가 이동 중이시네요 !"
+                        textStayTime.text = "지금 어디론가 이동 중이신 것 같아요!"
                         lastLat = lat
                         lastLon = lon
                         return
@@ -160,7 +160,7 @@ class MainFragment : Fragment() {
                         val formatted = if (hours > 0) "${hours}시간 ${remainingMinutes}분" else "${remainingMinutes}분"
                         textStayTime.text = "지금 한 장소에서\n$formatted 머물러 있어요"
                     } else {
-                        textStayTime.text = ""
+                        textStayTime.text = "지금 어디론가 이동 중이신 것 같아요!"
                     }
                 }
             }
