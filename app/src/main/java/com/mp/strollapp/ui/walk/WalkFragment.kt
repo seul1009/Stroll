@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.location.Location
 import android.os.Bundle
 import android.os.Handler
@@ -153,7 +154,7 @@ class WalkFragment : Fragment(), OnMapReadyCallback {
             totalDistance = prefs.getFloat("prev_distance", 0f)
             seconds = prefs.getInt("prev_seconds", 0)
             timeText.text = String.format("%02d:%02d", seconds / 60, seconds % 60)
-            distanceText.text = "${totalDistance.toInt()} m"
+            distanceText.text = String.format("%.2f km", totalDistance / 1000)
 
             val pathString = prefs.getString("prev_path", "") ?: ""
             pathCoords.clear()
@@ -182,8 +183,10 @@ class WalkFragment : Fragment(), OnMapReadyCallback {
             pathCoords.clear()
             path.map = null
             timeText.text = "00:00"
-            distanceText.text = "0 m"
+            distanceText.text = "0 km"
             previousLocation = null
+            path.color = Color.YELLOW
+            path.width = 10
         }
 
         // 지도 위치 초기화
@@ -203,7 +206,7 @@ class WalkFragment : Fragment(), OnMapReadyCallback {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 for (location in result.locations) {
-                    Log.d("WalkFragment", "Location received: ${location.latitude}, ${location.longitude}")
+
                     val latLng = LatLng(location.latitude, location.longitude)
                     naverMap?.locationOverlay?.position = latLng
 
@@ -211,7 +214,8 @@ class WalkFragment : Fragment(), OnMapReadyCallback {
                         val distance = it.distanceTo(location)
                         if (distance > 2f) {
                             totalDistance += distance
-                            distanceText.text = "${totalDistance.toInt()} m"
+                            val km = totalDistance / 1000
+                            distanceText.text = String.format("%.2f km", km)
                         }
                     }
 
@@ -220,7 +224,6 @@ class WalkFragment : Fragment(), OnMapReadyCallback {
                     if (pathCoords.size >= 2) {
                         path.coords = pathCoords
                         if (path.map == null) {
-                            Log.d("WalkFragment", "Path has enough points, setting map")
                             path.map = naverMap
                         }
                     }

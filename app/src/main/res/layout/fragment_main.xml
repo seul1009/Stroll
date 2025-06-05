@@ -16,7 +16,8 @@
         android:text="오늘 산책 어때요?"
         android:textSize="35sp"
         android:textStyle="bold"
-        android:padding="45dp"
+        android:paddingTop="40dp"
+        android:paddingBottom="10dp"
         android:layout_gravity="center_horizontal"
         android:fontFamily="@font/dangam_bold"
         android:textColor="#383838"/>
@@ -73,6 +74,7 @@
         android:layout_margin="18dp"
         android:elevation="4dp"
         android:layout_gravity="center_horizontal"
+        android:gravity="center_horizontal"
         android:layout_marginHorizontal="8dp">
 
         <TextView
@@ -89,9 +91,23 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="지금 한 장소에서\n_ 시간 머물러 있어요"
-
             android:textSize="16sp"
             android:fontFamily="@font/dangam"/>
+
+        <Button
+            android:id="@+id/btnSetAlertTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="산책 알림 설정"
+            android:textSize="15sp"
+            android:fontFamily="@font/dangam"
+            android:textColor="#383838"
+            android:backgroundTint="#f7f7f6"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="4dp"
+            android:paddingHorizontal="18dp"
+            android:paddingVertical="10dp"
+            android:elevation="6dp" />
     </LinearLayout>
 
     <!-- 오늘의 산책 -->
@@ -103,6 +119,7 @@
         android:background="#FFFBD9"
         android:elevation="4dp"
         android:orientation="vertical"
+        android:gravity="center_horizontal"
         android:padding="20dp">
 
         <TextView

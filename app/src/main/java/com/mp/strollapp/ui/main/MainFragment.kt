@@ -16,10 +16,18 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.provider.Settings
 import android.util.Log
+import android.widget.Button
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.SwitchCompat
+import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -45,6 +53,12 @@ class MainFragment : Fragment() {
     private lateinit var locationCallback: com.google.android.gms.location.LocationCallback
     private lateinit var locationRequest: com.google.android.gms.location.LocationRequest
 
+    private var hasNotifiedStay = false
+
+    // 알림 버튼
+    private lateinit var switchWalkAlert: SwitchCompat
+    private val PREF_NAME = "walk_pref"
+    private val PREF_KEY_ALERT = "walk_alert_enabled"
 
     override fun onCreateView(
         inflater: android.view.LayoutInflater,
@@ -68,6 +82,22 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val prefs = requireContext().getSharedPreferences("walk_alert", Context.MODE_PRIVATE)
+        val alertHour = prefs.getInt("alertHour", 3) // 기본값: 3시간
+        val alertMillis = alertHour * 60 * 60 * 1000L
+
+        stayStartTime?.let {
+            val elapsedMillis = System.currentTimeMillis() - it
+            if (elapsedMillis > alertMillis && !hasNotifiedStay) {
+                sendNotification()
+                hasNotifiedStay = true
+            }
+        }
+
+        val btnSetAlertTime = view.findViewById<Button>(R.id.btnSetAlertTime)
+        btnSetAlertTime.setOnClickListener {
+            showAlertTimeDialog()
+        }
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
@@ -77,6 +107,14 @@ class MainFragment : Fragment() {
         textStayTime = view.findViewById(R.id.textStayTime)
         textWalkTime = view.findViewById(R.id.textWalkTime)
         textWalkDistance = view.findViewById(R.id.textWalkDistance)
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (ActivityCompat.checkSelfPermission(requireContext(), android.Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 2000)
+            }
+        }
 
         viewModel.temperature.observe(viewLifecycleOwner) { temp ->
             textTemperature.text = temp ?: "--°C"
@@ -97,7 +135,8 @@ class MainFragment : Fragment() {
         }
 
         viewModel.todayWalkSummary.observe(viewLifecycleOwner) { (distance, duration) ->
-            textWalkDistance.text = "산책 거리 : $distance m"
+            val km = distance / 1000.0
+            textWalkDistance.text = String.format("산책 거리 : %.2f km", km)
 
             val minutes = duration / 60
             val hours = minutes / 60
@@ -120,7 +159,7 @@ class MainFragment : Fragment() {
             priority = com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
         }
 
-        val MIN_STAY_DISTANCE = 10 // 10m 이상
+        val MIN_STAY_DISTANCE = 6 // 10m 이상
         val MIN_STAY_DURATION = 3 * 60 * 1000L // 3분 이상 (머무름 기준)
 
         locationCallback = object : com.google.android.gms.location.LocationCallback() {
@@ -130,41 +169,102 @@ class MainFragment : Fragment() {
                 val lon = location.longitude
 
                 // 거리 비교
-                if (lastLat != null && lastLon != null) {
-                    val distance = calculateDistance(lastLat!!, lastLon!!, lat, lon)
+                val distance = if (lastLat != null && lastLon != null)
+                    calculateDistance(lastLat!!, lastLon!!, lat, lon)
+                else
+                    0f
 
-                    if (distance < MIN_STAY_DISTANCE) {
-                        if (stayStartTime == null)
-                            stayStartTime = System.currentTimeMillis()
-                    } else {
-                        stayStartTime = null
-                        textStayTime.text = "지금 어디론가 이동 중이신 것 같아요!"
-                        lastLat = lat
-                        lastLon = lon
-                        return
-                    }
+                if (distance < MIN_STAY_DISTANCE) {
+                    // 머무름 상태 시작 시간 기록
+                    if (stayStartTime == null)
+                        stayStartTime = System.currentTimeMillis()
                 } else {
-                    // 최초 측정
+                    // 이동 감지: 초기화
+                    stayStartTime = null
+                    hasNotifiedStay = false
+                    textStayTime.text = "지금 어디론가 이동 중이신 것 같아요!"
                     lastLat = lat
                     lastLon = lon
-                    stayStartTime = System.currentTimeMillis()
+                    return
                 }
+
                 // 머무름 시간 계산
                 stayStartTime?.let {
                     val elapsedMillis = System.currentTimeMillis() - it
+                    // 알림 전송
+                    val prefs = requireContext().getSharedPreferences("walk_alert", Context.MODE_PRIVATE)
+                    val alertHour = prefs.getInt("alertHour", 3)
+                    val alertMillis = alertHour * 60 * 60 * 1000L
 
-                    if (elapsedMillis > MIN_STAY_DURATION) {
-                        val minutes = (elapsedMillis / 1000) / 60
-                        val hours = minutes / 60
-                        val remainingMinutes = minutes % 60
-                        val formatted = if (hours > 0) "${hours}시간 ${remainingMinutes}분" else "${remainingMinutes}분"
-                        textStayTime.text = "지금 한 장소에서\n$formatted 머물러 있어요"
-                    } else {
-                        textStayTime.text = "지금 어디론가 이동 중이신 것 같아요!"
+                    if (alertHour > 0 && elapsedMillis > alertMillis && !hasNotifiedStay) {
+                        if (prefs.getBoolean(PREF_KEY_ALERT, true)) {
+                            sendNotification()
+                            hasNotifiedStay = true
+                        }
                     }
+                    val minutes = (elapsedMillis / 1000) / 60
+                    val hours = minutes / 60
+                    val remainingMinutes = minutes % 60
+                    val formatted = if (hours > 0) "${hours}시간 ${remainingMinutes}분" else "${remainingMinutes}분"
+
+                    textStayTime.text = "지금 한 장소에서\n$formatted 머물러 있어요"
                 }
+
+                // 마지막 위치 갱신
+                lastLat = lat
+                lastLon = lon
+
             }
         }
+    }
+
+    private fun showAlertTimeDialog() {
+        val alertTimes = arrayOf("알림 없음", "1시간", "2시간", "3시간", "4시간", "5시간")
+        val prefs = requireContext().getSharedPreferences("walk_alert", Context.MODE_PRIVATE)
+        val current = prefs.getInt("alertHour", 3).coerceIn(0, 5)
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("알림 기준 시간 선택")
+            .setSingleChoiceItems(alertTimes, current) { dialog, which ->
+                val selectedHour = if (which == 0) 0 else which
+                prefs.edit().putInt("alertHour", selectedHour).apply()
+                dialog.dismiss()
+                val message = if (which == 0) {
+                    "알림이 꺼졌습니다."
+                } else {
+                    "${which}시간 이상 머무를 때 알림이 설정되었습니다."
+                }
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+
+    private fun sendNotification() {
+        val prefs = requireContext().getSharedPreferences("walk_alert", Context.MODE_PRIVATE)
+        val selectedHour = prefs.getInt("alertHour", 3) // 기본 3시간
+
+        val notificationManager = requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = "stay_channel"
+        val channelName = "산책 알림"
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                channelName,
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val notification = NotificationCompat.Builder(requireContext(), channelId)
+            .setSmallIcon(R.drawable.ic_walk)
+            .setContentTitle("동네 한 바퀴")
+            .setContentText("${selectedHour}시간 이상 같은 장소에 머물렀어요. 산책은 어떠세요?")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+
+        notificationManager.notify(1001, notification)
     }
 
     override fun onResume() {
