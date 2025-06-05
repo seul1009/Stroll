@@ -2,7 +2,7 @@
     <item
         android:id="@+id/navigation_main"
         android:icon="@drawable/ic_main"
-        android:title="홈" />
+        android:title="홈"/>
     <item
         android:id="@+id/navigation_walk"
         android:icon="@drawable/ic_walk"

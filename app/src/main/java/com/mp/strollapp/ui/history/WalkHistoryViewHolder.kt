@@ -16,7 +16,7 @@ class WalkHistoryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) 
     private val textDate: TextView = itemView.findViewById(R.id.textDate)
 
     fun bind(record: WalkRecordEntity) {
-        textDistance.text = "거리: %.2f km".format(record.distance)
+        textDistance.text = "거리: %.2f km".format(record.distance / 1000.0)
 
         val durationFormatted = formatDuration(record.duration)
         textDuration.text = "시간: $durationFormatted"
