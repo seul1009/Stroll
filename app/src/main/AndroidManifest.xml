@@ -32,7 +32,7 @@
             </intent-filter>
         </activity>
         <activity android:name="com.mp.strollapp.ui.weather.WeatherDetailActivity" />
-
+        <activity android:name=".ui.history.PathMapActivity" />
         <service
             android:name=".service.LocationForegroundService"
             android:enabled="true"

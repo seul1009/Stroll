@@ -18,9 +18,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="2025.05.27 18:35"
-            android:textSize="16sp"
+            android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="#666666"/>
+            android:textColor="#666666"
+            android:fontFamily="@font/dangam"/>
 
         <TextView
             android:id="@+id/textDistance"
@@ -28,16 +29,17 @@
             android:layout_height="wrap_content"
             android:text="거리: 2.4km"
             android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginTop="4dp"/>
+            android:layout_marginTop="5dp"
+            android:fontFamily="@font/dangam"/>
 
         <TextView
             android:id="@+id/textDuration"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="시간: 00:43:12"
-            android:textSize="14sp"
-            android:layout_marginTop="4dp"/>
+            android:textSize="16sp"
+            android:layout_marginTop="5dp"
+            android:fontFamily="@font/dangam"/>
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

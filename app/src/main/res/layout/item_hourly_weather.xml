@@ -13,6 +13,7 @@
         android:text="09:00"
         android:textSize="16sp"
         android:textStyle="bold"
+        android:fontFamily="@font/dangam"
         android:textColor="#222222"
         android:layout_marginBottom="4dp" />
 
@@ -30,6 +31,7 @@
         android:text="맑음"
         android:textSize="14sp"
         android:textColor="#444444"
+        android:fontFamily="@font/dangam"
         android:layout_marginBottom="2dp" />
 
     <TextView
@@ -39,6 +41,7 @@
         android:text="17°C"
         android:textSize="14sp"
         android:textColor="#444444"
+        android:fontFamily="@font/dangam"
         android:layout_marginBottom="2dp" />
 
     <TextView
@@ -48,6 +51,7 @@
         android:text="5.4 m/s"
         android:textSize="12sp"
         android:textColor="#666666"
+        android:fontFamily="@font/dangam"
         android:layout_marginBottom="2dp" />
 
     <TextView
@@ -56,5 +60,6 @@
         android:layout_height="wrap_content"
         android:text="30%"
         android:textSize="12sp"
-        android:textColor="#666666" />
+        android:textColor="#666666"
+        android:fontFamily="@font/dangam"/>
 </LinearLayout>

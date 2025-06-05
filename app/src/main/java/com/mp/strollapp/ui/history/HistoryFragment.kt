@@ -1,5 +1,6 @@
 package com.mp.strollapp.ui.history
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -45,6 +46,16 @@ class HistoryFragment : Fragment() {
             val records = db.walkRecordDao().getAll()
             Log.d("HistoryFragment", "불러온 기록 개수: ${records.size}")
             adapter.submitList(records)
+
+            adapter.setOnItemClickListener { record ->
+                val intent = Intent(requireContext(), PathMapActivity::class.java)
+                intent.putExtra("path", record.path)
+                intent.putExtra("distance", record.distance)
+                intent.putExtra("duration", record.duration)
+                intent.putExtra("timestamp", record.timestamp)
+                startActivity(intent)
+            }
         }
+
     }
 }
