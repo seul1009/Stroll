@@ -45,6 +45,15 @@
         android:layout_marginBottom="2dp" />
 
     <TextView
+        android:id="@+id/textHumidity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="30%"
+        android:textSize="12sp"
+        android:textColor="#666666"
+        android:fontFamily="@font/dangam"/>
+
+    <TextView
         android:id="@+id/textWind"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -53,13 +62,4 @@
         android:textColor="#666666"
         android:fontFamily="@font/dangam"
         android:layout_marginBottom="2dp" />
-
-    <TextView
-        android:id="@+id/textHumidity"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="30%"
-        android:textSize="12sp"
-        android:textColor="#666666"
-        android:fontFamily="@font/dangam"/>
 </LinearLayout>

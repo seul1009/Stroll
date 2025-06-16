@@ -194,8 +194,13 @@ class MainFragment : Fragment() {
                     // 알림 전송
                     val prefs = requireContext().getSharedPreferences("walk_alert", Context.MODE_PRIVATE)
                     val alertHour = prefs.getInt("alertHour", 3)
-                    val alertMillis = alertHour * 60 * 60 * 1000L
 
+                    if (alertHour == 0) {
+                        textStayTime.text = "알림 없음 설정 중입니다"
+                        return@let
+                    }
+
+                    val alertMillis = alertHour * 60 * 60 * 1000L
                     if (alertHour > 0 && elapsedMillis > alertMillis && !hasNotifiedStay) {
                         if (prefs.getBoolean(PREF_KEY_ALERT, true)) {
                             sendNotification()

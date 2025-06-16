@@ -2,12 +2,14 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginTop="80dp"
-    android:layout_marginBottom="50dp">
+    android:background="#fffbeb">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+
+        android:layout_marginTop="80dp"
+        android:layout_marginBottom="50dp"
         android:orientation="vertical"
         android:gravity="center_horizontal">
 
@@ -25,7 +27,7 @@
             android:id="@+id/textWeatherComment"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="날씨 설명"
+            android:text="날씨 불러오는 중 .."
             android:textSize="35sp"
             android:textStyle="bold"
             android:fontFamily="@font/dangam"
@@ -45,6 +47,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
+            android:padding="15dp"
             android:weightSum="4">
 
 
@@ -147,17 +150,28 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="시간대별 날씨"
-            android:textSize="16sp"
+            android:textSize="18sp"
             android:textStyle="bold"
             android:fontFamily="@font/dangam"
             android:layout_marginTop="40dp"
-            android:layout_marginBottom="10dp" />
+            android:layout_marginBottom="20dp" />
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="#CCCCCC"
             android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/textHourlyLoading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="시간대별 날씨를 불러오는 중 .."
+            android:textSize="16sp"
+            android:textColor="#888888"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="50dp"
+            android:visibility="visible" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerHourlyWeather"
@@ -166,7 +180,8 @@
             android:orientation="horizontal"
             android:nestedScrollingEnabled="false"
             android:overScrollMode="never"
-            android:scrollbars="horizontal"/>
+            android:scrollbars="horizontal"
+            android:visibility="gone" />
 
         <View
             android:layout_width="match_parent"

@@ -8,6 +8,7 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -63,47 +64,60 @@ class WeatherDetailActivity : AppCompatActivity() {
     }
 
     private fun observeViewModel() {
+        val recycler = findViewById<RecyclerView>(R.id.recyclerHourlyWeather)
+        val loadingText = findViewById<TextView>(R.id.textHourlyLoading)
+        val commentText = findViewById<TextView>(R.id.textWeatherComment)
+
         viewModel.weatherList.observe(this) { weatherList ->
-            findViewById<RecyclerView>(R.id.recyclerHourlyWeather).adapter =
-                HourlyWeatherAdapter(weatherList)
+            if (weatherList.isNullOrEmpty()) {
+                // 로딩 중
+                recycler.visibility = View.GONE
+                loadingText.visibility = View.VISIBLE
+                commentText.text = "" // 또는 commentText.visibility = View.GONE
+            } else {
+                // 로딩 완료
+                recycler.adapter = HourlyWeatherAdapter(weatherList)
+                recycler.visibility = View.VISIBLE
+                loadingText.visibility = View.GONE
+                commentText.visibility = View.VISIBLE
 
-            weatherList.firstOrNull()?.let { today ->
-                findViewById<TextView>(R.id.textWindSpeed).text = today.windSpeed
-                findViewById<TextView>(R.id.textHumidity).text = today.humidity
-                findViewById<TextView>(R.id.textRain).text = "${today.rain}%"
-                findViewById<TextView>(R.id.textAverageTemp).text = today.temperature
+                weatherList.firstOrNull()?.let { today ->
+                    findViewById<TextView>(R.id.textWindSpeed).text = today.windSpeed
+                    findViewById<TextView>(R.id.textHumidity).text = today.humidity
+                    findViewById<TextView>(R.id.textRain).text = "${today.rain}%"
+                    findViewById<TextView>(R.id.textAverageTemp).text = today.temperature
 
-                val weatherText = when (today.pty) {
-                    "1" -> "현재 비가 와요"
-                    "2" -> "현재 비/눈이 와요 "
-                    "3" -> "지금 눈이 오고 있어요 !"
-                    "4" -> "현재 소나기가 내려요"
-                    else -> when (today.sky) {
-                        "1" -> "날씨가 좋네요! \n 나가서 산책 어때요?"
-                        "3" -> "구름이 많아요 \n 그래도 산책하기 좋아요 !"
-                        "4" -> "지금은 흐리네요"
-                        else -> "날씨 정보 없음"
+                    val weatherText = when (today.pty) {
+                        "1" -> "현재 비가 와요"
+                        "2" -> "현재 비/눈이 와요 "
+                        "3" -> "지금 눈이 오고 있어요 !"
+                        "4" -> "현재 소나기가 내려요"
+                        else -> when (today.sky) {
+                            "1" -> "날씨가 좋네요! \n 나가서 산책 어때요?"
+                            "3" -> "구름이 많아요 \n 그래도 산책하기 좋아요 !"
+                            "4" -> "지금은 흐리네요"
+                            else -> "날씨 정보 없음"
+                        }
                     }
-                }
-                findViewById<TextView>(R.id.textWeatherComment).text = weatherText
+                    commentText.text = weatherText
 
-                val imageWeather = findViewById<ImageView>(R.id.imageWeather)
-                val iconRes = when (today.pty) {
-                    "1" -> R.drawable.ic_rainy
-                    "2" -> R.drawable.ic_snow
-                    "3" -> R.drawable.ic_snow
-                    "4" -> R.drawable.ic_rainy
-                    else -> when (today.sky) {
-                        "1" -> R.drawable.ic_sunny
-                        "3" -> R.drawable.ic_cloudy
-                        "4" -> R.drawable.ic_sunny_cloudy
-                        else -> R.drawable.ic_weather_unknown
+                    val imageWeather = findViewById<ImageView>(R.id.imageWeather)
+                    val iconRes = when (today.pty) {
+                        "1" -> R.drawable.ic_rainy
+                        "2" -> R.drawable.ic_snow
+                        "3" -> R.drawable.ic_snow
+                        "4" -> R.drawable.ic_rainy
+                        else -> when (today.sky) {
+                            "1" -> R.drawable.ic_sunny
+                            "3" -> R.drawable.ic_cloudy
+                            "4" -> R.drawable.ic_sunny_cloudy
+                            else -> R.drawable.ic_weather_unknown
+                        }
                     }
+                    imageWeather.setImageResource(iconRes)
                 }
-                imageWeather.setImageResource(iconRes)
             }
         }
-
         viewModel.address.observe(this) {
             findViewById<TextView>(R.id.textLocation).text = it
         }
