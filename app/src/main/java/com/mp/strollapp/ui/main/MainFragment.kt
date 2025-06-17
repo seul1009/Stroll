@@ -53,9 +53,10 @@ class MainFragment : Fragment() {
     private lateinit var locationCallback: com.google.android.gms.location.LocationCallback
     private lateinit var locationRequest: com.google.android.gms.location.LocationRequest
 
+    // 알림 전송 여부 플래그
     private var hasNotifiedStay = false
 
-    // 알림 버튼
+    // 사용자 알림 설정 상태 저장용 Switch
     private lateinit var switchWalkAlert: SwitchCompat
     private val PREF_NAME = "walk_pref"
     private val PREF_KEY_ALERT = "walk_alert_enabled"
@@ -68,6 +69,7 @@ class MainFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_main, container, false)
     }
 
+    // 두 위치 간 거리 계산 (미터 단위)
     private fun calculateDistance(
         lat1: Double, lon1: Double,
         lat2: Double, lon2: Double
@@ -82,10 +84,13 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // 알림 기준 시간 불러오기
         val prefs = requireContext().getSharedPreferences("walk_alert", Context.MODE_PRIVATE)
         val alertHour = prefs.getInt("alertHour", 3) // 기본값: 3시간
         val alertMillis = alertHour * 60 * 60 * 1000L
 
+        // 앱 실행 시 이미 머무름 상태이면 바로 알림 체크
         stayStartTime?.let {
             val elapsedMillis = System.currentTimeMillis() - it
             if (elapsedMillis > alertMillis && !hasNotifiedStay) {
@@ -94,13 +99,15 @@ class MainFragment : Fragment() {
             }
         }
 
+        // 알림 기준 시간 설정 버튼
         val btnSetAlertTime = view.findViewById<Button>(R.id.btnSetAlertTime)
         btnSetAlertTime.setOnClickListener {
             showAlertTimeDialog()
         }
-
+        // 위치 서비스 초기화
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
+        // UI 바인딩
         val textTemperature = view.findViewById<TextView>(R.id.textTemperature)
         val imageWeatherIcon = view.findViewById<ImageView>(R.id.imageWeatherIcon)
         val layoutWeather = view.findViewById<View>(R.id.layoutWeather)
@@ -108,6 +115,7 @@ class MainFragment : Fragment() {
         textWalkTime = view.findViewById(R.id.textWalkTime)
         textWalkDistance = view.findViewById(R.id.textWalkDistance)
 
+        // Android 13 이상 알림 권한 요청
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             if (ActivityCompat.checkSelfPermission(requireContext(), android.Manifest.permission.POST_NOTIFICATIONS)
                 != PackageManager.PERMISSION_GRANTED
@@ -116,12 +124,13 @@ class MainFragment : Fragment() {
             }
         }
 
+        // 날씨 텍스트/아이콘 옵저빙
         viewModel.temperature.observe(viewLifecycleOwner) { temp ->
             textTemperature.text = temp ?: "--°C"
         }
 
+
         viewModel.weatherCondition.observe(viewLifecycleOwner) { condition ->
-            Log.d("날씨 조건", "condition = $condition")
             imageWeatherIcon.setImageResource(
                 when (condition) {
                     "맑음" -> R.drawable.ic_sunny
@@ -133,7 +142,7 @@ class MainFragment : Fragment() {
                 }
             )
         }
-
+        // 오늘 산책 거리/시간 옵저빙
         viewModel.todayWalkSummary.observe(viewLifecycleOwner) { (distance, duration) ->
             val km = distance / 1000.0
             textWalkDistance.text = String.format("산책 거리 : %.2f km", km)
@@ -144,15 +153,16 @@ class MainFragment : Fragment() {
             textWalkTime.text = if (hours > 0) "산책 시간 : ${hours}시간 ${rem}분" else "산책 시간 : ${rem}분"
         }
 
-
+        // 요약 데이터 및 날씨 초기 호출
         viewModel.fetchTodayWalkSummary()
         getCurrentLocationAndFetchWeather()
 
+        // 날씨 레이아웃 클릭 시 상세 화면으로 이동
         layoutWeather.setOnClickListener {
             val intent = Intent(requireContext(), WeatherDetailActivity::class.java)
             startActivity(intent)
         }
-
+        // 위치 요청 설정
         locationRequest = com.google.android.gms.location.LocationRequest.create().apply {
             interval = 60_000L            // 위치 요청 주기 (60초)
             fastestInterval = 30_000L     // 가장 빠른 위치 갱신 간격
@@ -162,13 +172,14 @@ class MainFragment : Fragment() {
         val MIN_STAY_DISTANCE = 6 // 10m 이상
         val MIN_STAY_DURATION = 3 * 60 * 1000L // 3분 이상 (머무름 기준)
 
+        // 위치 업데이트 콜백 정의
         locationCallback = object : com.google.android.gms.location.LocationCallback() {
             override fun onLocationResult(result: com.google.android.gms.location.LocationResult) {
                 val location = result.lastLocation ?: return
                 val lat = location.latitude
                 val lon = location.longitude
 
-                // 거리 비교
+                // 이동 여부 판단
                 val distance = if (lastLat != null && lastLon != null)
                     calculateDistance(lastLat!!, lastLon!!, lat, lon)
                 else
@@ -223,6 +234,7 @@ class MainFragment : Fragment() {
         }
     }
 
+    // 알림 기준 시간 설정 다이얼로그 표시
     private fun showAlertTimeDialog() {
         val alertTimes = arrayOf("알림 없음", "1시간", "2시간", "3시간", "4시간", "5시간")
         val prefs = requireContext().getSharedPreferences("walk_alert", Context.MODE_PRIVATE)
@@ -245,6 +257,7 @@ class MainFragment : Fragment() {
             .show()
     }
 
+    // 사용자에게 산책 알림 전송
     private fun sendNotification() {
         val prefs = requireContext().getSharedPreferences("walk_alert", Context.MODE_PRIVATE)
         val selectedHour = prefs.getInt("alertHour", 3) // 기본 3시간
@@ -272,6 +285,7 @@ class MainFragment : Fragment() {
         notificationManager.notify(1001, notification)
     }
 
+    // 프래그먼트 포그라운드 진입 시 위치 업데이트 시작
     override fun onResume() {
         super.onResume()
         if (ActivityCompat.checkSelfPermission(
@@ -287,11 +301,13 @@ class MainFragment : Fragment() {
         }
     }
 
+    // 프래그먼트가 중지될 때 위치 업데이트 중단
     override fun onPause() {
         super.onPause()
         fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
+    // 현재 위치 받아와 날씨 조회 및 머무름 상태 초기화
     private fun getCurrentLocationAndFetchWeather() {
         if (ActivityCompat.checkSelfPermission(
                 requireContext(),
@@ -368,6 +384,7 @@ class MainFragment : Fragment() {
         }
     }
 
+    // 위치 수신 실패 시 알림 다이얼로그
     private fun showLocationFailedDialog() {
         AlertDialog.Builder(requireContext())
             .setTitle("위치 수신 실패")
@@ -379,6 +396,7 @@ class MainFragment : Fragment() {
             .show()
     }
 
+    // 현재 시간에 가장 근접한 기상청 base_time 반환
     private fun getLatestBaseTime(): String {
         val now = Calendar.getInstance()
         val hour = now.get(Calendar.HOUR_OF_DAY)

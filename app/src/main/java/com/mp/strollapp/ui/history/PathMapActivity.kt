@@ -26,10 +26,11 @@ class PathMapActivity : AppCompatActivity() {
         mapView = findViewById(R.id.mapView)
         mapView.onCreate(savedInstanceState)
 
-        // 비동기로 네이버 지도 객체를 받아 지도 설정
+        // 네이버 지도를 비동기로 초기화하고 경로 및 마커 표시
         mapView.getMapAsync { naverMap ->
+            // 인텐트에서 path 데이터 추출
             val pathString = intent.getStringExtra("path") ?: return@getMapAsync
-            val coords = parsePathString(pathString)
+            val coords = parsePathString(pathString) // String → List<LatLng> 변환
 
             // 지도 위에 경로 표시
             val pathOverlay = PathOverlay().apply {
@@ -40,6 +41,7 @@ class PathMapActivity : AppCompatActivity() {
             pathOverlay.map = naverMap
 
             if (coords.isNotEmpty()) {
+                // 첫 위치로 카메라 이동
                 val cameraUpdate = CameraUpdate.scrollTo(coords[0])
                 naverMap.moveCamera(cameraUpdate)
 
@@ -63,23 +65,28 @@ class PathMapActivity : AppCompatActivity() {
             }
         }
 
+        // UI 텍스트뷰 초기화 및 데이터 세팅
         val textDate = findViewById<TextView>(R.id.textDate)
         val textDistance = findViewById<TextView>(R.id.textDistance)
         val textDuration = findViewById<TextView>(R.id.textDuration)
 
+        // timestamp 포맷팅
         val timestamp = intent.getLongExtra("timestamp", 0L)
         val date = SimpleDateFormat("yyyy.MM.dd HH:mm", Locale.getDefault()).format(Date(timestamp))
         textDate.text = "날짜: $date"
 
+        // 거리 km 변환
         val distance = intent.getDoubleExtra("distance", 0.0) / 1000.0
         textDistance.text = "거리: %.2f km".format(distance)
 
+        // 시간 시:분:초 변환
         val duration = intent.getIntExtra("duration", 0)
         val formattedDuration = formatDuration(duration)
         textDuration.text = "시간: $formattedDuration"
 
     }
 
+    // 산책 시간(초)을 "hh:mm:ss" 포맷으로 변환
     private fun formatDuration(durationSec: Int): String {
         val h = durationSec / 3600
         val m = (durationSec % 3600) / 60
@@ -99,6 +106,7 @@ class PathMapActivity : AppCompatActivity() {
         }
     }
 
+    // MapView 생명주기 동기화
     override fun onStart() { super.onStart(); mapView.onStart() }
     override fun onResume() { super.onResume(); mapView.onResume() }
     override fun onPause() { super.onPause(); mapView.onPause() }

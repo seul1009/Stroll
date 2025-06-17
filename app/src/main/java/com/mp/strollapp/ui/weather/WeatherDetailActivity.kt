@@ -45,9 +45,11 @@ class WeatherDetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_weather_detail)
 
+        // ViewModel 및 위치 클라이언트 초기화
         viewModel = ViewModelProvider(this)[WeatherViewModel::class.java]
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
+        // 위치 권한 확인
         if (!hasLocationPermission()) {
             requestLocationPermission()
             return
@@ -58,16 +60,19 @@ class WeatherDetailActivity : AppCompatActivity() {
         requestLocationAndWeather()
     }
 
+    // 시간별 날씨 리사이클러뷰 설정
     private fun setupRecyclerView() {
         findViewById<RecyclerView>(R.id.recyclerHourlyWeather).layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
     }
 
+    // ViewModel의 LiveData 관찰
     private fun observeViewModel() {
         val recycler = findViewById<RecyclerView>(R.id.recyclerHourlyWeather)
         val loadingText = findViewById<TextView>(R.id.textHourlyLoading)
         val commentText = findViewById<TextView>(R.id.textWeatherComment)
 
+        // 시간별 날씨 리스트 관찰
         viewModel.weatherList.observe(this) { weatherList ->
             if (weatherList.isNullOrEmpty()) {
                 // 로딩 중
@@ -81,12 +86,14 @@ class WeatherDetailActivity : AppCompatActivity() {
                 loadingText.visibility = View.GONE
                 commentText.visibility = View.VISIBLE
 
+                // 가장 첫 번째 시간의 날씨 정보로 상세 데이터 표시
                 weatherList.firstOrNull()?.let { today ->
                     findViewById<TextView>(R.id.textWindSpeed).text = today.windSpeed
                     findViewById<TextView>(R.id.textHumidity).text = today.humidity
                     findViewById<TextView>(R.id.textRain).text = "${today.rain}%"
                     findViewById<TextView>(R.id.textAverageTemp).text = today.temperature
 
+                    // 날씨 조건에 따른 메시지 설정
                     val weatherText = when (today.pty) {
                         "1" -> "현재 비가 와요"
                         "2" -> "현재 비/눈이 와요 "
@@ -101,6 +108,7 @@ class WeatherDetailActivity : AppCompatActivity() {
                     }
                     commentText.text = weatherText
 
+                    // 날씨 조건에 따라 아이콘 설정
                     val imageWeather = findViewById<ImageView>(R.id.imageWeather)
                     val iconRes = when (today.pty) {
                         "1" -> R.drawable.ic_rainy
@@ -118,11 +126,13 @@ class WeatherDetailActivity : AppCompatActivity() {
                 }
             }
         }
+        // 주소 텍스트 업데이트
         viewModel.address.observe(this) {
             findViewById<TextView>(R.id.textLocation).text = it
         }
     }
 
+    // 위치 요청 및 날씨 정보 API 호출
     private fun requestLocationAndWeather() {
         val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
@@ -136,6 +146,7 @@ class WeatherDetailActivity : AppCompatActivity() {
                 return@launch
             }
 
+            // 위치 가져오기
             val location = withContext(Dispatchers.IO) {
                 try {
                     if (ActivityCompat.checkSelfPermission(
@@ -155,6 +166,7 @@ class WeatherDetailActivity : AppCompatActivity() {
                 }
             }
 
+            // 위치 기반 날씨 API 요청
             if (location != null) {
                 val grid = GpsUtil.convertGRID_GPS(location.latitude, location.longitude)
                 val nx = grid["nx"] ?: 55
@@ -177,6 +189,7 @@ class WeatherDetailActivity : AppCompatActivity() {
         }
     }
 
+    // 위치 권한 확인
     private fun hasLocationPermission(): Boolean {
         return ActivityCompat.checkSelfPermission(
             this,
@@ -184,6 +197,7 @@ class WeatherDetailActivity : AppCompatActivity() {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    // 위치 권한 요청
     private fun requestLocationPermission() {
         ActivityCompat.requestPermissions(
             this,
@@ -192,6 +206,7 @@ class WeatherDetailActivity : AppCompatActivity() {
         )
     }
 
+    // 권한 요청 결과 처리
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -208,11 +223,7 @@ class WeatherDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun isGpsEnabled(): Boolean {
-        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
-        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-    }
-
+    // GPS 꺼져 있을 경우 설정창 유도 다이얼로그
     private fun showGpsDialog() {
         AlertDialog.Builder(this@WeatherDetailActivity)
             .setTitle("GPS 꺼짐")
@@ -224,9 +235,11 @@ class WeatherDetailActivity : AppCompatActivity() {
             .show()
     }
 
+    // 오늘 날짜를 yyyyMMdd 형식으로 반환
     private fun getTodayDate(): String =
         SimpleDateFormat("yyyyMMdd", Locale.KOREA).format(Date())
 
+    // 기상청 API 호출을 위한 가장 가까운 base time 계산
     private fun getLatestBaseTime(): String {
         val now = Calendar.getInstance()
         val hour = now.get(Calendar.HOUR_OF_DAY)

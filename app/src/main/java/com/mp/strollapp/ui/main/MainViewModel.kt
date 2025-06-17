@@ -16,13 +16,15 @@ import com.mp.strollapp.data.walk.WalkRecordDatabase
 import com.mp.strollapp.data.walk.WalkRecordEntity
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
-
+    // 현재 기온
     private val _temperature = MutableLiveData<String?>()
     val temperature: LiveData<String?> get() = _temperature
 
+    // 현재 날씨 상태
     private val _weatherCondition = MutableLiveData<String?>()
     val weatherCondition: LiveData<String?> get() = _weatherCondition
 
+    // 현재 주소
     private val _address = MutableLiveData<String>()
     val address: LiveData<String> get() = _address
 
@@ -30,11 +32,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _address.value = newAddress
     }
 
+    // Room DB의 DAO 객체
     private val walkRecordDao = WalkRecordDatabase.getInstance(application).walkRecordDao()
 
+    // 오늘의 누적 산책 거리 및 시간
     private val _todayWalkSummary = MutableLiveData<Pair<Int, Int>>()
     val todayWalkSummary: LiveData<Pair<Int, Int>> get() = _todayWalkSummary
 
+    // 오늘 날짜의 모든 산책 기록을 불러와 거리/시간 합산
     fun fetchTodayWalkSummary() {
         viewModelScope.launch {
             val records: List<WalkRecordEntity> = walkRecordDao.getTodayRecords()
@@ -45,6 +50,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // 날씨 API를 위한 Retrofit 인스턴스 생성
     private val retrofit = Retrofit.Builder()
         .baseUrl("https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/")
         .addConverterFactory(GsonConverterFactory.create())
@@ -52,6 +58,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val service = retrofit.create(WeatherService::class.java)
 
+    // 기상청 날씨 정보 조회 및 LiveData 업데이트
     fun fetchWeather(nx: Int, ny: Int, baseDate: String, baseTime: String) {
         viewModelScope.launch {
             try {
@@ -69,6 +76,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 if (response.isSuccessful) {
                     val items = response.body()?.response?.body?.items?.item
 
+                    // TMP: 기온, SKY: 하늘 상태, PTY: 강수 형태
                     val tmp = items?.find { it.category == "TMP" }?.fcstValue
                     val sky = items?.find { it.category == "SKY" }?.fcstValue
                     val pty = items?.find { it.category == "PTY" }?.fcstValue
@@ -86,6 +94,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // SKY, PTY 코드 값을 기반으로 날씨 상태 텍스트 반환
     private fun getWeatherCondition(sky: String?, pty: String?): String {
         return when (pty) {
             "1" -> "비"

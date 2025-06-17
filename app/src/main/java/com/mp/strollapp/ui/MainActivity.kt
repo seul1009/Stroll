@@ -22,7 +22,6 @@ class MainActivity : AppCompatActivity() {
 
     private val LOCATION_PERMISSION_REQUEST_CODE = 1001
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -36,20 +35,25 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart(){
         super.onStart()
+        // 위치 권한 및 GPS 확인 후 서비스 시작
         checkPermissionAndGps()
     }
 
+    // 위치 권한 및 GPS 상태 확인
     private fun checkPermissionAndGps() {
         if (!hasLocationPermission()) {
+            // 권한 없으면 요청 다이얼로그 표시
             requestLocationPermissionDialog()
             return
         }
 
         if (!isGpsEnabled()) {
+            // GPS 꺼져 있으면 설정 유도
             showGpsEnableDialog()
             return
         }
 
+        // 모든 조건 충족 시 하단 네비게이션 및 포그라운드 서비스 실행
         setupBottomNav()
 
         val serviceIntent = Intent(this, LocationForegroundService::class.java)
@@ -60,6 +64,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // 위치 권한이 있는지 확인
     private fun hasLocationPermission(): Boolean {
         return ActivityCompat.checkSelfPermission(
             this,
@@ -67,6 +72,7 @@ class MainActivity : AppCompatActivity() {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    // GPS 또는 네트워크 위치가 활성화되어 있는지 확인
     private fun isGpsEnabled(): Boolean {
         val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         val isGpsOn = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
@@ -74,6 +80,7 @@ class MainActivity : AppCompatActivity() {
         return isGpsOn || isNetworkOn
     }
 
+    // 위치 권한 요청 다이얼로그 표시
     private fun requestLocationPermissionDialog() {
         val prefs = getSharedPreferences("permission_prefs", Context.MODE_PRIVATE)
         val attempts = prefs.getInt("location_permission_attempts", 0)
@@ -104,6 +111,7 @@ class MainActivity : AppCompatActivity() {
 
             }
         } else {
+            // 두 번 이상 거부했을 경우 앱 설정으로 유도
             builder.setPositiveButton("설정으로 이동") { _, _ ->
                 val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                     data = Uri.parse("package:$packageName")
@@ -115,6 +123,7 @@ class MainActivity : AppCompatActivity() {
         builder.show()
     }
 
+    // GPS가 꺼져 있을 때 설정 유도 다이얼로그
     private fun showGpsEnableDialog() {
         AlertDialog.Builder(this)
             .setTitle("GPS가 꺼져 있습니다")
@@ -127,6 +136,7 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    // 하단 BottomNavigationView와 NavigationController 연동
     private fun setupBottomNav() {
         val navView: BottomNavigationView = findViewById(R.id.bottom_navigation)
         val navController = supportFragmentManager
@@ -138,6 +148,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // 권한 요청 결과 처리
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -147,14 +158,15 @@ class MainActivity : AppCompatActivity() {
 
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                resetPermissionAttempts()
+                resetPermissionAttempts() // 권한 허용 시 시도 횟수 초기화
                 checkPermissionAndGps()
             } else {
-                requestLocationPermissionDialog()
+                requestLocationPermissionDialog() // 거부 시 다시 다이얼로그 표시
             }
         }
     }
 
+    // SharedPreferences에 저장된 권한 요청 시도 횟수 초기화
     private fun resetPermissionAttempts() {
         val prefs = getSharedPreferences("permission_prefs", Context.MODE_PRIVATE)
         prefs.edit().putInt("location_permission_attempts", 0).apply()

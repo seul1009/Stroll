@@ -20,6 +20,7 @@ class HistoryFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: WalkHistoryAdapter
 
+    // Fragment UI 생성 시 호출되는 메서드
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -34,6 +35,7 @@ class HistoryFragment : Fragment() {
         return view
     }
 
+    // UI 생성 이후 호출되며 데이터 불러오기 및 이벤트 연결 처리
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -42,11 +44,13 @@ class HistoryFragment : Fragment() {
         adapter = WalkHistoryAdapter()
         recyclerView.adapter = adapter
 
+        // 비동기 코루틴을 사용해 데이터 조회
         lifecycleScope.launch {
-            val records = db.walkRecordDao().getAll()
+            val records = db.walkRecordDao().getAll() // 모든 산책 기록 가져오기
             Log.d("HistoryFragment", "불러온 기록 개수: ${records.size}")
-            adapter.submitList(records)
+            adapter.submitList(records) // 어댑터에 데이터 전달
 
+            // 항목 클릭 시 PathMapActivity로 이동하여 상세 경로 보기
             adapter.setOnItemClickListener { record ->
                 val intent = Intent(requireContext(), PathMapActivity::class.java)
                 intent.putExtra("path", record.path)

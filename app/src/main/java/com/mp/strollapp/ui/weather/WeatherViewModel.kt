@@ -17,16 +17,20 @@ import java.util.Locale
 
 class WeatherViewModel : ViewModel() {
 
+    // 날씨 데이터 리스트를 저장할 LiveData
     private val _weatherList = MutableLiveData<List<HourlyWeather>>()
     val weatherList: LiveData<List<HourlyWeather>> get() = _weatherList
 
+    // 사용자 위치 주소를 저장할 LiveData
     private val _address = MutableLiveData<String>()
     val address: LiveData<String> get() = _address
 
+    // 주소 값을 설정하는 함수
     fun setAddress(newAddress: String) {
         _address.postValue(newAddress)
     }
 
+    // 날씨 API를 호출하고 결과를 파싱하여 weatherList에 저장
     fun fetchWeatherList(nx: Int, ny: Int, baseDate: String, baseTime: String) {
         viewModelScope.launch {
             val result = try {
@@ -40,6 +44,7 @@ class WeatherViewModel : ViewModel() {
                     nx = nx,
                     ny = ny
                 )
+                // 응답이 성공이면 파싱하여 리스트로 변환
                 if (response.isSuccessful) {
                     parseResponseToWeatherList(response.body()?.response?.body?.items?.item)
                 } else {
@@ -49,21 +54,25 @@ class WeatherViewModel : ViewModel() {
                 Log.e("WeatherViewModel", "API 호출 실패: ${e.message}")
                 emptyList()
             }
+            // 결과를 LiveData에 반영
             _weatherList.postValue(result)
         }
     }
 
+    // API 응답 데이터를 시간별 날씨 정보 리스트로 변환
     private fun parseResponseToWeatherList(items: List<WeatherItem>?): List<HourlyWeather> {
         if (items == null) return emptyList()
+        // fcstTime(예보 시간) 기준으로 그룹화
         val grouped = items.groupBy { it.fcstTime }
 
+        // 각 시간별로 필요한 항목 추출 후 HourlyWeather 객체로 매핑
         return grouped.mapNotNull { (time, list) ->
-            val tmp = list.find { it.category == "TMP" }?.fcstValue
-            val sky = list.find { it.category == "SKY" }?.fcstValue
-            val pty = list.find { it.category == "PTY" }?.fcstValue
-            val wsd = list.find { it.category == "WSD" }?.fcstValue
-            val reh = list.find { it.category == "REH" }?.fcstValue
-            val rain = list.find { it.category == "POP"}?.fcstValue
+            val tmp = list.find { it.category == "TMP" }?.fcstValue // 기온
+            val sky = list.find { it.category == "SKY" }?.fcstValue // 하늘 상태
+            val pty = list.find { it.category == "PTY" }?.fcstValue // 강수 형태
+            val wsd = list.find { it.category == "WSD" }?.fcstValue // 풍속
+            val reh = list.find { it.category == "REH" }?.fcstValue // 습도
+            val rain = list.find { it.category == "POP"}?.fcstValue // 강수 확률
 
             if (tmp != null && sky != null && pty != null && wsd != null && reh != null && rain != null) {
                 HourlyWeather(
@@ -81,18 +90,7 @@ class WeatherViewModel : ViewModel() {
         }
     }
 
-    private fun getTodayDate(): String =
-        SimpleDateFormat("yyyyMMdd", Locale.KOREA).format(Date())
-
-    private fun getLatestBaseTime(): String {
-        val now = Calendar.getInstance()
-        val hour = now.get(Calendar.HOUR_OF_DAY)
-        val minute = now.get(Calendar.MINUTE)
-        val current = hour * 100 + minute
-        val times = listOf("0200", "0500", "0800", "1100", "1400", "1700", "2000", "2300")
-        return times.lastOrNull { current >= it.toInt() } ?: "0200"
-    }
-
+    // SKY, PTY 값을 기반으로 날씨 상태 텍스트 반환
     private fun getWeatherCondition(sky: String, pty: String): String {
         return when (pty) {
             "1" -> "비"

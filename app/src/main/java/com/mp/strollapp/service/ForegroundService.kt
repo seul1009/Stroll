@@ -36,24 +36,27 @@ class LocationForegroundService : Service() {
 
         createNotificationChannel(this)
 
+        // FusedLocationProviderClient 초기화
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
+        // 위치 업데이트 요청 간격 설정
         locationRequest = LocationRequest.create().apply {
-            interval = 60_000L
-            fastestInterval = 30_000L
-            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            interval = 60_000L // 1분마다 요청
+            fastestInterval = 30_000L // 최소 30초 간격
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY // 고정밀도 모드
         }
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 val location = result.lastLocation ?: return
 
+                // 이전 위치와 비교하여 거리 계산
                 previousLocation?.let {
-                    val distance = it.distanceTo(location)
-                    if (distance > 2f) {
+                    val distance = it.distanceTo(location) // 거리 계산 (단위: m)
+                    if (distance > 2f) { // 2m 이상 이동 시만 반영
                         totalDistance += distance
 
-                        // SharedPreferences에 거리 저장
+                        // 거리 SharedPreferences 저장
                         val prefs = getSharedPreferences("walk_state", Context.MODE_PRIVATE)
                         prefs.edit().putFloat("prev_distance", totalDistance).apply()
                     }
@@ -64,16 +67,16 @@ class LocationForegroundService : Service() {
             }
         }
 
-
+        // 1초마다 시간 증가 및 SharedPreferences에 저장
         runnable = object : Runnable {
             override fun run() {
                 seconds++
 
-                // SharedPreferences에 시간 저장
+                // 시간 SharedPreferences 저장
                 val prefs = getSharedPreferences("walk_state", Context.MODE_PRIVATE)
                 prefs.edit().putInt("prev_seconds", seconds).apply()
 
-                handler.postDelayed(this, 1000)
+                handler.postDelayed(this, 1000) // 1초마다 반복
             }
         }
         handler.post(runnable)
@@ -81,10 +84,12 @@ class LocationForegroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // 포그라운드 서비스 시작 및 위치 추적 시작
         startForegroundAndLocationUpdates()
         return START_STICKY
     }
 
+    // 포그라운드 알림 생성 + 위치 추적 시작
     private fun startForegroundAndLocationUpdates() {
         val channelId = "location_channel"
         val notification = NotificationCompat.Builder(this, channelId)
@@ -95,6 +100,7 @@ class LocationForegroundService : Service() {
 
         startForeground(1, notification)
 
+        // 위치 권한이 있는 경우에만 위치 업데이트 요청
         if (ActivityCompat.checkSelfPermission(
                 this, Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
@@ -107,6 +113,7 @@ class LocationForegroundService : Service() {
         }
     }
 
+    // 알림 채널 생성
     fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceChannel = NotificationChannel(
@@ -121,6 +128,7 @@ class LocationForegroundService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    // 서비스 종료 시 위치 업데이트와 시간 추적 중단
     override fun onDestroy() {
         super.onDestroy()
         fusedLocationClient.removeLocationUpdates(locationCallback)

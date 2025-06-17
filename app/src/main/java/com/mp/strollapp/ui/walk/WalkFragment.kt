@@ -66,6 +66,7 @@ class WalkFragment : Fragment(), OnMapReadyCallback {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // UI 요소 연결
         startCard = view.findViewById(R.id.startCard)
         walkCard = view.findViewById(R.id.walkCard)
         startButton = view.findViewById(R.id.startButton)
@@ -73,9 +74,11 @@ class WalkFragment : Fragment(), OnMapReadyCallback {
         timeText = view.findViewById(R.id.timeText)
         distanceText = view.findViewById(R.id.distanceText)
 
+        // FusedLocationProviderClient를 통해 위치 추적 시작
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         timerHandler = Handler(Looper.getMainLooper())
 
+        // 지도 프래그먼트 설정
         val fm = childFragmentManager
         var mapFragment = fm.findFragmentById(R.id.map_fragment) as? MapFragment
         if (mapFragment == null) {
@@ -83,13 +86,15 @@ class WalkFragment : Fragment(), OnMapReadyCallback {
             mapFragment = MapFragment.newInstance()
             fm.beginTransaction().replace(R.id.map_fragment, mapFragment).commitNow()
         }
-        mapFragment?.getMapAsync(this)
+        mapFragment?.getMapAsync(this) // 네이버지도 비동기 초기화
 
+        // 산책 시작 버튼 클릭 시
         startButton.setOnClickListener {
             startCard.visibility = View.GONE
             walkCard.visibility = View.VISIBLE
             startTracking()
 
+            // 포그라운드 서비스 시작
             val intent = Intent(requireContext(), LocationForegroundService::class.java)
             requireContext().startService(intent)
 
@@ -115,12 +120,14 @@ class WalkFragment : Fragment(), OnMapReadyCallback {
             }
         }
 
+        // 산책 종료 버튼 클릭 시
         stopButton.setOnClickListener {
+            // 산책 중이 아닐 경우 예외 처리
             if (!isTracking) {
                 Toast.makeText(requireContext(), "산책이 진행 중이 아닙니다.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-
+            // UI 초기화 및 추적 종료
             walkCard.visibility = View.GONE
             startCard.visibility = View.VISIBLE
             stopTracking()
@@ -138,6 +145,7 @@ class WalkFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
+    // 산책 추적 시작
     private fun startTracking(resume: Boolean = false) {
         if (isTracking) return
         if (ActivityCompat.checkSelfPermission(
@@ -148,8 +156,9 @@ class WalkFragment : Fragment(), OnMapReadyCallback {
             Log.e("WalkFragment", "naverMap is null")
             return
         }
-
+        // resume = true이면 이전 상태 복원
         if (resume) {
+            // 이전 산책 데이터 복원
             val prefs = requireContext().getSharedPreferences("walk_state", Context.MODE_PRIVATE)
             totalDistance = prefs.getFloat("prev_distance", 0f)
             seconds = prefs.getInt("prev_seconds", 0)
@@ -169,6 +178,7 @@ class WalkFragment : Fragment(), OnMapReadyCallback {
                 }
             }
 
+            // 경로 복원 및 마지막 위치 설정
             if (pathCoords.size >= 2) {
                 path.coords = pathCoords
                 path.map = naverMap
@@ -178,6 +188,7 @@ class WalkFragment : Fragment(), OnMapReadyCallback {
                 }
             }
         } else {
+            // 새 산책 시작
             totalDistance = 0f
             seconds = 0
             pathCoords.clear()
@@ -234,8 +245,10 @@ class WalkFragment : Fragment(), OnMapReadyCallback {
             }
         }
 
+        // 위치 업데이트 요청 시작
         fusedLocationClient.requestLocationUpdates(request, locationCallback, Looper.getMainLooper())
 
+        // 1초 간격으로 시간 증가 및 SharedPreferences 갱신
         timerRunnable = object : Runnable {
             override fun run() {
                 seconds++
@@ -258,10 +271,11 @@ class WalkFragment : Fragment(), OnMapReadyCallback {
         isTracking = true
     }
 
-
+    // 산책 추적 종료 및 기록 저장
     private fun stopTracking() {
         isTracking = false
 
+        // 상태 저장
         val prefs = requireContext().getSharedPreferences("walk_state", Context.MODE_PRIVATE)
         prefs.edit()
             .putFloat("prev_distance", totalDistance)
@@ -278,6 +292,7 @@ class WalkFragment : Fragment(), OnMapReadyCallback {
         path.map = null
         timerHandler.removeCallbacks(timerRunnable)
 
+        // Room DB에 기록 저장
         val db = WalkRecordDatabase.getInstance(requireContext())
         val pathString = pathCoords.joinToString(";") { "${it.latitude},${it.longitude}" }
 
@@ -295,6 +310,7 @@ class WalkFragment : Fragment(), OnMapReadyCallback {
 
     private var shouldResumeTracking = false
 
+    // 화면 복귀 시 이전 상태 확인 및 재시작
     override fun onResume() {
         super.onResume()
 
@@ -317,6 +333,7 @@ class WalkFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
+    // 지도 준비 완료 콜백
     override fun onMapReady(map: NaverMap) {
         naverMap = map
         map.locationOverlay.isVisible = true
@@ -327,7 +344,7 @@ class WalkFragment : Fragment(), OnMapReadyCallback {
             shouldResumeTracking = false
         }
     }
-
+    // 산책 중지 후 위치 추적 중단
     override fun onPause() {
         super.onPause()
 
