@@ -1,6 +1,8 @@
 # 🚶 동네 한 바퀴
 > ### 모바일 프로그래밍 개인 프로젝트
 > ### 주제 : 사용자의 걸음 수 및 위치 이동 데이터를 기반으로 산책을 유도하는 건강 습관 형성 앱
+<img src="https://github.com/user-attachments/assets/3dab995b-5ef4-4646-938d-c4adea68f857" width="700"/>
+
 <br><br> 
 
 ## 💻 개발 환경
