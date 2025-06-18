@@ -44,3 +44,7 @@ Naver 지도 위에 경로를 시각적으로 표시합니다.
 ![image](https://github.com/user-attachments/assets/d2531001-3f59-4614-98ba-0356c3f16726)
 ![image](https://github.com/user-attachments/assets/3e4d0566-0e49-4193-959f-634af0dc3aa3)
 ![image](https://github.com/user-attachments/assets/398ec7fe-f1d6-4f1c-9b7f-9f6306984906)
+<br><br>
+
+## 시연 영상
+https://github.com/user-attachments/assets/970eb391-82f9-430f-82f4-31606e0be382
